@@ -10,7 +10,8 @@ A Duolingo-style language learning app for India, powered by [Sarvam AI](https:/
 | Frontend | React 18 + TypeScript + Vite + Tailwind CSS |
 | Backend | Python FastAPI + sarvamai SDK |
 | Storage | localStorage (no auth needed) |
-| Speech APIs | Sarvam bulbul:v3 (TTS), saarika:v2.5 (STT), mayura:v1 (translate) |
+| Speech APIs | Sarvam bulbul:v2 (TTS), saarika:v2 (STT), mayura:v1 (translate) |
+| Fonts | Nunito (UI), Poppins (headlines), Noto Sans Devanagari (Hindi) |
 
 ## Running Locally
 
@@ -60,13 +61,27 @@ Open http://localhost:5173 in your browser.
 | Type | Flow |
 |------|------|
 | Listen & Identify | Hear Hindi audio → pick correct English meaning |
-| Speak & Repeat | Read Hindi phrase → record yourself → STT match |
+| Speak & Repeat | Read Hindi phrase → press-and-hold mic → STT match |
 | Type the Translation | See English phrase → type Hindi translation |
 
 ## Lesson Content (V1)
 
-- **Unit 1 — Greetings & Basics** (3 lessons)
-- **Unit 2 — Numbers & Colors** (3 lessons)
-- **Unit 3 — Food & Daily Life** (3 lessons)
+- **Unit 1 — Greetings & Basics** (3 lessons, ~16 exercises)
+- **Unit 2 — Numbers & Colors** (3 lessons, ~18 exercises)
+- **Unit 3 — Food & Daily Life** (3 lessons, ~16 exercises)
 
 Total: 9 lessons, ~50 exercises, English → Hindi.
+
+## Design
+
+- **Indian mandala motifs** — subtle SVG mandala at 6% opacity on home screen
+- **Color palette** — saffron (`#FF7A00`), marigold (`#FFC857`), deep indigo (`#1F3A5F`), cream (`#F8F5F0`)
+- **All lessons unlocked** — no paywall or progression gates in V1
+- **Progress ring** on home screen showing overall completion %
+- **Streak tracking** — daily streak + total XP stored in localStorage
+
+## Notes
+
+- TTS uses `bulbul:v2` (not v3 — sarvamai SDK v0.1.4 limitation)
+- Speak & Repeat has inline feedback; no global overlay for that exercise type
+- Press-and-hold mic recording on desktop and mobile

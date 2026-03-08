@@ -1,84 +1,56 @@
 import { useNavigate } from 'react-router-dom'
 import { useProgress } from '../hooks/useProgress'
+import { allLessons, units } from '../data/lessons'
 
-/** Full detailed Indian mandala SVG */
-function Mandala({ opacity = 1 }: { opacity?: number }) {
-  const petals8 = [0, 45, 90, 135, 180, 225, 270, 315]
-  const petals16 = Array.from({ length: 16 }, (_, i) => i * 22.5)
+/** Circular progress ring showing lesson completion */
+function ProgressRing({ pct }: { pct: number }) {
+  const r = 44
+  const circ = 2 * Math.PI * r
+  const offset = circ - (pct / 100) * circ
 
   return (
-    <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity }}>
-      {/* Outer dotted ring */}
-      <circle cx="200" cy="200" r="190" stroke="#FF7A00" strokeWidth="1" strokeDasharray="3 6" />
-      {/* Outer 16 diamond tips */}
-      {petals16.map((deg) => (
-        <ellipse key={`od${deg}`} cx="200" cy="30" rx="4" ry="10"
-          fill="#FFC857" fillOpacity="0.6" transform={`rotate(${deg} 200 200)`} />
-      ))}
-      {/* Second ring */}
-      <circle cx="200" cy="200" r="162" stroke="#FFC857" strokeWidth="1.5" strokeDasharray="5 5" />
-      {/* Large outer petals */}
-      {petals8.map((deg) => (
-        <ellipse key={`lp${deg}`} cx="200" cy="62" rx="12" ry="28"
-          fill="#FF7A00" fillOpacity="0.18" stroke="#FF7A00" strokeWidth="1"
-          transform={`rotate(${deg} 200 200)`} />
-      ))}
-      {/* Ring 3 */}
-      <circle cx="200" cy="200" r="130" stroke="#E07A5F" strokeWidth="1" strokeDasharray="4 4" />
-      {/* Mid petals */}
-      {petals8.map((deg) => (
-        <ellipse key={`mp${deg}`} cx="200" cy="90" rx="8" ry="20"
-          fill="#E07A5F" fillOpacity="0.25" stroke="#E07A5F" strokeWidth="0.8"
-          transform={`rotate(${deg} 200 200)`} />
-      ))}
-      {/* 16 small inner petals */}
-      {petals16.map((deg) => (
-        <ellipse key={`sp${deg}`} cx="200" cy="118" rx="5" ry="12"
-          fill="#FFC857" fillOpacity="0.4" transform={`rotate(${deg} 200 200)`} />
-      ))}
-      {/* Ring 4 */}
-      <circle cx="200" cy="200" r="100" stroke="#FF7A00" strokeWidth="1.5" />
-      {/* Inner diamond star */}
-      {petals8.map((deg) => (
-        <ellipse key={`is${deg}`} cx="200" cy="130" rx="6" ry="18"
-          fill="#1F3A5F" fillOpacity="0.15" transform={`rotate(${deg} 200 200)`} />
-      ))}
-      {/* Ring 5 */}
-      <circle cx="200" cy="200" r="72" stroke="#FFC857" strokeWidth="1.5" strokeDasharray="3 3" />
-      {/* Inner flower petals */}
-      {petals8.map((deg) => (
-        <ellipse key={`fp${deg}`} cx="200" cy="152" rx="10" ry="20"
-          fill="#FF7A00" fillOpacity="0.3" stroke="#FF7A00" strokeWidth="0.5"
-          transform={`rotate(${deg} 200 200)`} />
-      ))}
-      {/* Ring 6 */}
-      <circle cx="200" cy="200" r="50" stroke="#E07A5F" strokeWidth="1.5" />
-      {/* Core lotus */}
-      {petals8.map((deg) => (
-        <ellipse key={`cl${deg}`} cx="200" cy="168" rx="7" ry="14"
-          fill="#E07A5F" fillOpacity="0.5" transform={`rotate(${deg} 200 200)`} />
-      ))}
-      {/* Center circles */}
-      <circle cx="200" cy="200" r="26" fill="#FFC857" fillOpacity="0.3" stroke="#FF7A00" strokeWidth="2" />
-      <circle cx="200" cy="200" r="14" fill="#FF7A00" fillOpacity="0.5" />
-      <circle cx="200" cy="200" r="6" fill="#FF7A00" />
-    </svg>
+    <div className="relative flex items-center justify-center" style={{ width: 120, height: 120 }}>
+      <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
+        {/* Track */}
+        <circle cx="60" cy="60" r={r} fill="none" stroke="#EDE8E0" strokeWidth="8" />
+        {/* Fill */}
+        <circle
+          cx="60" cy="60" r={r} fill="none"
+          stroke="url(#ringGrad)" strokeWidth="8"
+          strokeLinecap="round"
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+          style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+        />
+        <defs>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#FF7A00" />
+            <stop offset="100%" stopColor="#FFC857" />
+          </linearGradient>
+        </defs>
+      </svg>
+      {/* Center label */}
+      <div className="absolute flex flex-col items-center">
+        <span className="text-2xl font-extrabold" style={{ color: '#1F3A5F', lineHeight: 1 }}>
+          {pct}%
+        </span>
+        <span className="text-xs font-medium mt-0.5" style={{ color: '#a08878' }}>done</span>
+      </div>
+    </div>
   )
 }
 
-/** Repeating Indian geometric border (diamonds + dots) */
-function BorderPattern({ flip = false }: { flip?: boolean }) {
+/** Thin top accent strip — thin diamond-pattern band */
+function TopAccent() {
   return (
-    <svg viewBox="0 0 800 24" preserveAspectRatio="none"
-      style={{ display: 'block', transform: flip ? 'scaleY(-1)' : undefined }}>
-      <rect width="800" height="24" fill="#FF7A00" />
-      {Array.from({ length: 40 }, (_, i) => (
-        <g key={i} transform={`translate(${i * 20}, 0)`}>
-          <polygon points="10,2 18,12 10,22 2,12" fill="#FFC857" opacity="0.85" />
-          <circle cx="10" cy="12" r="2" fill="#1F3A5F" opacity="0.5" />
-        </g>
-      ))}
-    </svg>
+    <div style={{ height: 7, background: '#FF7A00', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+      {/* subtle repeating diamond dots */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px)',
+        backgroundSize: '14px 7px',
+      }} />
+    </div>
   )
 }
 
@@ -86,84 +58,167 @@ export default function Home() {
   const navigate = useNavigate()
   const { progress } = useProgress()
 
-  return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ background: '#F8F5F0' }}>
+  const totalLessons = allLessons.length
+  const completedCount = progress.completedLessons.length
+  const progressPct = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0
 
-      {/* Top Indian border */}
-      <div style={{ height: 24, flexShrink: 0 }}><BorderPattern /></div>
+  // Next lesson to do
+  const nextLesson = allLessons.find((l) => !progress.completedLessons.includes(l.id))
+  const nextUnit = nextLesson ? units.find((u) => u.id === nextLesson.unitId) : null
+
+  const isReturning = completedCount > 0
+
+  return (
+    <div className="min-h-screen flex flex-col" style={{ background: '#F8F5F0' }}>
+
+      {/* Thin top accent strip */}
+      <TopAccent />
+
+      {/* Subtle background mandala — 6% opacity only */}
+      <div
+        className="fixed inset-0 pointer-events-none select-none flex items-center justify-center"
+        style={{ zIndex: 0 }}
+      >
+        <svg viewBox="0 0 400 400" fill="none" style={{ width: 560, height: 560, opacity: 0.06 }}>
+          {[0,45,90,135,180,225,270,315].map((deg) => (
+            <ellipse key={`a${deg}`} cx="200" cy="55" rx="13" ry="30"
+              fill="#FF7A00" transform={`rotate(${deg} 200 200)`} />
+          ))}
+          {[0,45,90,135,180,225,270,315].map((deg) => (
+            <ellipse key={`b${deg}`} cx="200" cy="105" rx="9" ry="22"
+              fill="#E07A5F" transform={`rotate(${deg} 200 200)`} />
+          ))}
+          {Array.from({length:16},(_,i)=>i*22.5).map((deg) => (
+            <ellipse key={`c${deg}`} cx="200" cy="148" rx="5" ry="13"
+              fill="#FFC857" transform={`rotate(${deg} 200 200)`} />
+          ))}
+          <circle cx="200" cy="200" r="168" stroke="#FF7A00" strokeWidth="1.5" strokeDasharray="6 5" />
+          <circle cx="200" cy="200" r="128" stroke="#FFC857" strokeWidth="1" strokeDasharray="4 4" />
+          <circle cx="200" cy="200" r="88"  stroke="#E07A5F" strokeWidth="1" strokeDasharray="3 4" />
+          <circle cx="200" cy="200" r="52"  stroke="#FF7A00" strokeWidth="1.5" />
+          {[0,45,90,135,180,225,270,315].map((deg) => (
+            <ellipse key={`d${deg}`} cx="200" cy="167" rx="8" ry="15"
+              fill="#E07A5F" opacity="0.7" transform={`rotate(${deg} 200 200)`} />
+          ))}
+          <circle cx="200" cy="200" r="20" fill="#FFC857" opacity="0.6" />
+          <circle cx="200" cy="200" r="8"  fill="#FF7A00" />
+        </svg>
+      </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 relative">
+      <div className="flex-1 flex flex-col items-center justify-center px-5 py-8 relative z-10">
+        <div className="w-full" style={{ maxWidth: 380 }}>
 
-        {/* Large faded background mandala */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-          <div style={{ width: 500, height: 500, maxWidth: '90vw', maxHeight: '90vw' }}>
-            <Mandala opacity={0.07} />
-          </div>
-        </div>
+          {/* Greeting */}
+          <p className="text-base font-semibold text-center mb-5"
+            style={{ color: '#FF7A00', letterSpacing: '0.02em' }}>
+            {isReturning ? '👋 Welcome back!' : '👋 Namaste! Ready for 2 minutes of Hindi?'}
+          </p>
 
-        {/* Corner accent mandalas */}
-        <div className="absolute top-0 left-0 pointer-events-none select-none"
-          style={{ width: 160, height: 160, transform: 'translate(-35%, -35%)' }}>
-          <Mandala opacity={0.13} />
-        </div>
-        <div className="absolute bottom-0 right-0 pointer-events-none select-none"
-          style={{ width: 160, height: 160, transform: 'translate(35%, 35%)' }}>
-          <Mandala opacity={0.13} />
-        </div>
-
-        {/* Content card */}
-        <div className="z-10 text-center w-full" style={{ maxWidth: 360 }}>
-
-          {/* Mandala logo */}
-          <div className="flex justify-center mb-5">
-            <div style={{ width: 80, height: 80 }}><Mandala opacity={1} /></div>
+          {/* Progress ring */}
+          <div className="flex flex-col items-center mb-4">
+            <ProgressRing pct={progressPct} />
+            <p className="text-sm mt-2 font-medium" style={{ color: '#a08878' }}>
+              {completedCount}/{totalLessons} lessons complete
+            </p>
           </div>
 
-          {/* Title */}
-          <h1 className="text-4xl font-extrabold mb-1" style={{ color: '#1F3A5F', letterSpacing: '-0.5px' }}>
+          {/* Headline */}
+          <h1 className="text-center font-bold mb-3"
+            style={{ fontSize: 48, color: '#1F2937', lineHeight: 1.1, letterSpacing: '-0.5px' }}>
             Indian Duolingo
           </h1>
-          <p className="devanagari text-xl font-semibold mb-5" style={{ color: '#FF7A00' }}>
-            इंडियन ड्यूओलिंगो
+
+          {/* Hindi subtitle */}
+          <p className="devanagari font-semibold text-center mb-4"
+            style={{ fontSize: 24, color: '#FF7A00' }}>
+            हिंदी सीखो
           </p>
 
-          {/* Ornamental divider */}
-          <div className="flex items-center gap-3 justify-center mb-5">
-            <div style={{ flex: 1, height: 1, background: '#E07A5F', opacity: 0.3 }} />
-            <span style={{ color: '#E07A5F', fontSize: 12 }}>◆</span>
-            <div style={{ flex: 1, height: 1, background: '#E07A5F', opacity: 0.3 }} />
-          </div>
-
-          <p className="text-base mb-8" style={{ color: '#6b5744', lineHeight: 1.6 }}>
-            Learn Hindi the way<br />Indians actually speak it.
+          {/* Punchy copy */}
+          <p className="text-center mb-6" style={{ fontSize: 19, color: '#6B7280', lineHeight: 1.6 }}>
+            Learn everyday Hindi.<br />
+            <span style={{ color: '#9CA3AF' }}>Not textbook Hindi.</span>
           </p>
 
-          {/* Streak pill — only after first lesson */}
+          {/* Streak badge */}
           {progress.currentStreak > 0 && (
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6 text-sm font-semibold"
-              style={{ background: '#FFF3E0', color: '#FF7A00', border: '1px solid #FFC857' }}>
-              🔥 {progress.currentStreak}-day streak · {progress.totalXP} XP
+            <div className="flex justify-center mb-7">
+              <div className="flex items-center gap-3 px-5 py-3 rounded-2xl"
+                style={{ background: '#FFF3E6', border: '1px solid #FFD3A3' }}>
+                <span style={{ fontSize: 28 }}>🔥</span>
+                <div>
+                  <p className="font-bold" style={{ fontSize: 16, color: '#FF7A00', lineHeight: 1.2 }}>
+                    {progress.currentStreak} Day Streak
+                  </p>
+                  <p style={{ fontSize: 13, color: '#a08878' }}>
+                    +{progress.totalXP} XP earned
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* CTA */}
+          {/* CTA button */}
           <button
             onClick={() => navigate('/learn')}
-            className="w-full py-4 rounded-2xl text-lg font-bold text-white active:scale-95 transition-transform"
-            style={{ background: 'linear-gradient(135deg, #FF7A00 0%, #FFC857 100%)', boxShadow: '0 6px 20px rgba(255,122,0,0.35)' }}
+            className="w-full font-bold text-white active:scale-95 transition-transform"
+            style={{
+              height: 56,
+              borderRadius: 18,
+              fontSize: 18,
+              background: 'linear-gradient(135deg, #FF7A00 0%, #FFB347 100%)',
+              boxShadow: '0 10px 20px rgba(255,122,0,0.25)',
+              border: 'none',
+              cursor: 'pointer',
+              marginBottom: 24,
+            }}
           >
-            {progress.completedLessons.length > 0 ? 'Continue Learning →' : 'Start Learning →'}
+            {isReturning ? 'Continue Learning →' : 'Start Learning →'}
           </button>
 
-          <p className="mt-4 text-xs" style={{ color: '#a08878' }}>
-            No account needed · Progress saved in your browser
-          </p>
+          {/* Today's Lesson preview */}
+          {nextLesson && (
+            <div
+              className="flex items-center gap-3 px-4 py-3 rounded-2xl mb-6"
+              style={{
+                background: 'white',
+                border: '1px solid #EDE8E0',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
+              }}
+            >
+              <div className="flex-shrink-0 text-2xl w-10 h-10 flex items-center justify-center rounded-xl"
+                style={{ background: '#FFF3E0' }}>
+                {nextUnit?.emoji ?? '📖'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wide mb-0.5"
+                  style={{ color: '#a08878' }}>
+                  Up Next
+                </p>
+                <p className="text-sm font-bold truncate" style={{ color: '#1F2937' }}>
+                  {nextLesson.title}
+                </p>
+                <p className="text-xs" style={{ color: '#9CA3AF' }}>
+                  {nextLesson.exercises.length} exercises · ~2 minutes
+                </p>
+              </div>
+              <span style={{ color: '#FFC857', fontSize: 20 }}>›</span>
+            </div>
+          )}
+
+          {/* Trust indicators */}
+          <div className="flex flex-col gap-2">
+            {['5 minute lessons', 'No signup required', 'Works in your browser'].map((t) => (
+              <div key={t} className="flex items-center gap-2">
+                <span style={{ color: '#52B788', fontSize: 13 }}>✔</span>
+                <span className="text-sm" style={{ color: '#9CA3AF' }}>{t}</span>
+              </div>
+            ))}
+          </div>
+
         </div>
       </div>
-
-      {/* Bottom Indian border */}
-      <div style={{ height: 24, flexShrink: 0 }}><BorderPattern flip /></div>
     </div>
   )
 }

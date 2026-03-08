@@ -1,175 +1,264 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { tts, stt } from '../../api/sarvam'
 import { useAudio } from '../../hooks/useAudio'
-import { useMicrophone } from '../../hooks/useMicrophone'
 import type { Exercise } from '../../types'
 
 interface Props {
   exercise: Exercise
+  /**
+   * Called when user clicks Continue after reviewing inline feedback.
+   * SpeakRepeat manages its own feedback — the global FeedbackOverlay
+   * is not used for this exercise type.
+   */
   onResult: (correct: boolean) => void
 }
 
-/** Simple character-overlap similarity (0–1). Handles Devanagari well. */
+/** Bigram similarity (0–1) — handles Devanagari well */
 function similarity(a: string, b: string): number {
-  const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '')
-  const na = normalize(a)
-  const nb = normalize(b)
+  const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '')
+  const na = norm(a), nb = norm(b)
   if (na === nb) return 1
   if (!na || !nb) return 0
-
-  // Bigram overlap
   const bigrams = (s: string) => {
     const set = new Set<string>()
     for (let i = 0; i < s.length - 1; i++) set.add(s.slice(i, i + 2))
     return set
   }
-  const ba = bigrams(na)
-  const bb = bigrams(nb)
-  let matches = 0
-  ba.forEach((bg) => { if (bb.has(bg)) matches++ })
-  return (2 * matches) / (ba.size + bb.size)
+  const ba = bigrams(na), bb = bigrams(nb)
+  let hits = 0
+  ba.forEach((g) => { if (bb.has(g)) hits++ })
+  return (2 * hits) / (ba.size + bb.size)
 }
 
-const PASS_THRESHOLD = 0.5 // 50% bigram overlap to pass
+const PASS = 0.50
+
+function qualitativeFeedback(score: number, hindi: string) {
+  if (score >= 0.85) return { ok: true,  label: 'Excellent! 🎉', note: 'Your pronunciation is spot on.' }
+  if (score >= 0.65) return { ok: true,  label: 'Good try! 👍',  note: `Focus on the sounds in "${hindi}" more carefully.` }
+  if (score >= PASS)  return { ok: true,  label: 'Almost there!', note: 'Listen once more and speak slowly.' }
+  return               { ok: false, label: 'Keep practising 💪', note: 'Try listening a few times, then speak.' }
+}
 
 export default function SpeakRepeat({ exercise, onResult }: Props) {
   const { play } = useAudio()
-  const { micState, audioBlob, startRecording, stopRecording, resetMic } = useMicrophone()
-
-  const [loadingTTS, setLoadingTTS] = useState(true)
   const [audioBase64, setAudioBase64] = useState<string | null>(null)
-  const [transcript, setTranscript] = useState<string | null>(null)
-  const [score, setScore] = useState<number | null>(null)
-  const [submitted, setSubmitted] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [audioSlow,   setAudioSlow]   = useState<string | null>(null)
+  const [loadingTTS,  setLoadingTTS]  = useState(true)
 
-  // Load TTS model pronunciation on mount
+  const [recording,  setRecording]  = useState(false)
+  const [processing, setProcessing] = useState(false)
+  const [score,      setScore]      = useState<number | null>(null)
+  const [transcript, setTranscript] = useState<string | null>(null)
+  const [error,      setError]      = useState<string | null>(null)
+
+  const recorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef   = useRef<Blob[]>([])
+
+  // Load both normal and slow TTS on mount, then auto-play normal
   useEffect(() => {
     let cancelled = false
     setLoadingTTS(true)
-    setTranscript(null)
     setScore(null)
-    setSubmitted(false)
-    resetMic()
-
-    tts({ text: exercise.hindiText, language_code: 'hi-IN' })
-      .then((b64) => {
-        if (cancelled) return
-        setAudioBase64(b64)
-        setLoadingTTS(false)
-        return play(b64)
-      })
-      .catch((e) => { if (!cancelled) { setError(e.message); setLoadingTTS(false) } })
-
-    return () => { cancelled = true }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exercise.id])
-
-  // When a new audio blob is ready, transcribe it
-  useEffect(() => {
-    if (!audioBlob) return
+    setTranscript(null)
     setError(null)
 
-    stt(audioBlob, 'hi-IN')
-      .then((text) => {
-        setTranscript(text)
-        const sim = similarity(text, exercise.hindiText)
-        setScore(Math.round(sim * 100))
-        setSubmitted(true)
-        onResult(sim >= PASS_THRESHOLD)
+    Promise.all([
+      tts({ text: exercise.hindiText, language_code: 'hi-IN', pace: 1.0 }),
+      tts({ text: exercise.hindiText, language_code: 'hi-IN', pace: 0.7 }),
+    ])
+      .then(([normal, slow]) => {
+        if (cancelled) return
+        setAudioBase64(normal)
+        setAudioSlow(slow)
+        setLoadingTTS(false)
+        return play(normal)
       })
-      .catch((e) => setError(e.message))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [audioBlob])
+      .catch((e) => {
+        if (!cancelled) { setError(e.message); setLoadingTTS(false) }
+      })
+
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exercise.id])
+
+  // Press-and-hold recording handlers
+  async function startRecording() {
+    if (recording || processing) return
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
+      chunksRef.current = []
+      recorderRef.current = recorder
+
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop())
+        setRecording(false)
+        setProcessing(true)
+        try {
+          const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+          const text = await stt(blob, 'hi-IN')
+          setTranscript(text)
+          setScore(similarity(text, exercise.hindiText))
+        } catch (e: unknown) {
+          setError(e instanceof Error ? e.message : 'STT failed')
+        } finally {
+          setProcessing(false)
+        }
+      }
+
+      recorder.start()
+      setRecording(true)
+    } catch {
+      setError('Microphone access denied.')
+    }
+  }
+
+  function stopRecording() {
+    if (recorderRef.current?.state === 'recording') recorderRef.current.stop()
+  }
+
+  const fb   = score !== null ? qualitativeFeedback(score, exercise.hindiText) : null
+  const done = score !== null && !processing
 
   return (
     <div className="flex flex-col items-center gap-5 px-4 py-6 max-w-md mx-auto w-full">
+
       {/* Instruction */}
-      <p className="text-base font-semibold" style={{ color: '#4A4A6A' }}>
-        🎤 Listen, then repeat the phrase
+      <p className="text-sm font-semibold" style={{ color: '#6B7280' }}>
+        Tap the card to hear it, then repeat
       </p>
 
-      {/* Hindi phrase to repeat */}
-      <div
-        className="w-full rounded-3xl p-6 text-center shadow-md"
-        style={{ background: '#1E3A5F' }}
+      {/* Phrase card — tappable, light design, clear hierarchy */}
+      <button
+        onClick={() => audioBase64 && play(audioBase64)}
+        disabled={loadingTTS}
+        className="w-full rounded-3xl text-center active:scale-98 transition-transform disabled:opacity-60"
+        style={{
+          background: '#FFFFFF',
+          border: '2px solid #EDE8E0',
+          boxShadow: '0 6px 20px rgba(0,0,0,0.07)',
+          padding: '28px 24px',
+          cursor: loadingTTS ? 'default' : 'pointer',
+        }}
       >
-        <p className="devanagari text-4xl font-bold text-white mb-2">{exercise.hindiText}</p>
-        <p className="text-sm italic" style={{ color: '#FFB800' }}>
+        <div className="flex justify-end mb-1">
+          <span style={{ color: '#FFC857', fontSize: 18 }}>
+            {loadingTTS ? '⏳' : '🔊'}
+          </span>
+        </div>
+        {/* Hindi — dominant */}
+        <p className="devanagari font-bold mb-2"
+          style={{ fontSize: 44, color: '#1F3A5F', lineHeight: 1.2 }}>
+          {exercise.hindiText}
+        </p>
+        {/* Romanization — secondary */}
+        <p className="font-medium mb-1"
+          style={{ fontSize: 18, color: '#FF7A00', fontStyle: 'italic' }}>
           {exercise.hindiRomanized}
         </p>
-        <p className="text-xs mt-1 text-white opacity-60">{exercise.englishText}</p>
-      </div>
-
-      {/* Play model pronunciation */}
-      <button
-        disabled={loadingTTS || !audioBase64}
-        onClick={() => audioBase64 && play(audioBase64)}
-        className="flex items-center gap-2 px-5 py-2 rounded-full font-semibold text-sm shadow active:scale-95 transition-transform disabled:opacity-50"
-        style={{ background: '#FFF3E0', color: '#FF6B00', border: '1px solid #FFB800' }}
-      >
-        {loadingTTS ? '⏳ Loading…' : '🔊 Hear pronunciation'}
+        {/* English — smallest */}
+        <p style={{ fontSize: 13, color: '#9CA3AF' }}>{exercise.englishText}</p>
       </button>
 
-      {/* Mic controls */}
-      {!submitted && (
-        <div className="flex flex-col items-center gap-3">
-          {micState === 'idle' && (
-            <button
-              onClick={startRecording}
-              className="w-24 h-24 rounded-full flex flex-col items-center justify-center text-3xl shadow-lg active:scale-95 transition-transform text-white font-bold"
-              style={{ background: 'linear-gradient(135deg, #FF6B00, #FFB800)' }}
-            >
-              🎤
-              <span className="text-xs mt-1">RECORD</span>
-            </button>
-          )}
-          {micState === 'recording' && (
-            <button
-              onClick={stopRecording}
-              className="w-24 h-24 rounded-full flex flex-col items-center justify-center text-3xl shadow-lg mic-pulse active:scale-95 transition-transform text-white font-bold"
-              style={{ background: '#E74C3C' }}
-            >
-              ⏹
-              <span className="text-xs mt-1">STOP</span>
-            </button>
-          )}
-          {micState === 'processing' && (
-            <div
-              className="w-24 h-24 rounded-full flex items-center justify-center text-4xl"
-              style={{ background: '#FFF3E0' }}
-            >
-              ⏳
-            </div>
-          )}
+      {/* Replay row: normal + slow */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => audioBase64 && play(audioBase64)}
+          disabled={!audioBase64}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold
+                     active:scale-95 transition-transform disabled:opacity-40"
+          style={{ background: '#FFF3E0', color: '#FF7A00', border: '1px solid #FFD3A3' }}
+        >
+          🔊 Normal
+        </button>
+        <button
+          onClick={() => audioSlow && play(audioSlow)}
+          disabled={!audioSlow}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold
+                     active:scale-95 transition-transform disabled:opacity-40"
+          style={{ background: '#F8F5F0', color: '#6B7280', border: '1px solid #EDE8E0' }}
+        >
+          🐢 Slow
+        </button>
+      </div>
+
+      {/* Press-and-hold mic */}
+      {!done && (
+        <div className="flex flex-col items-center gap-2">
+          <button
+            onMouseDown={startRecording}
+            onMouseUp={stopRecording}
+            onTouchStart={(e) => { e.preventDefault(); startRecording() }}
+            onTouchEnd={stopRecording}
+            disabled={processing || loadingTTS}
+            className="flex flex-col items-center justify-center rounded-full text-white select-none"
+            style={{
+              width: 88, height: 88, fontSize: 30, border: 'none',
+              background: recording
+                ? 'linear-gradient(135deg,#E74C3C,#C0392B)'
+                : 'linear-gradient(135deg,#FF7A00,#FFC857)',
+              boxShadow: recording
+                ? '0 0 0 10px rgba(231,76,60,0.18),0 0 0 22px rgba(231,76,60,0.07)'
+                : '0 8px 20px rgba(255,122,0,0.30)',
+              animation: recording ? 'micPulse 1s ease-in-out infinite' : 'none',
+              transition: 'background 0.2s, box-shadow 0.2s',
+              cursor: processing ? 'default' : 'pointer',
+            }}
+          >
+            {processing ? '⏳' : recording ? '⏹' : '🎤'}
+          </button>
+          <p className="text-xs font-medium" style={{ color: '#9CA3AF' }}>
+            {processing ? 'Analysing…' : recording ? 'Release to stop' : 'Hold to record'}
+          </p>
         </div>
       )}
 
-      {/* Transcript + score result */}
-      {submitted && transcript !== null && (
+      {/* Inline qualitative feedback — no big bottom banner */}
+      {done && fb && (
         <div
-          className="w-full rounded-2xl p-4 text-center shadow"
-          style={{ background: '#FFF3E0', border: '2px solid #FFB800' }}
+          className="w-full rounded-2xl px-5 py-4"
+          style={{
+            background: fb.ok ? '#F0FAF5' : '#FEF3EE',
+            border: `1.5px solid ${fb.ok ? '#B7E4C7' : '#FFD3A3'}`,
+          }}
         >
-          <p className="text-xs font-semibold mb-1" style={{ color: '#4A4A6A' }}>
-            You said:
+          <p className="font-bold text-base mb-1"
+            style={{ color: fb.ok ? '#52B788' : '#FF7A00' }}>
+            {fb.label}
           </p>
-          <p className="devanagari text-2xl font-bold mb-2" style={{ color: '#1E3A5F' }}>
-            {transcript || '(no speech detected)'}
-          </p>
-          <p
-            className="text-lg font-bold"
-            style={{ color: score !== null && score >= PASS_THRESHOLD * 100 ? '#00A896' : '#C85C3A' }}
-          >
-            Match: {score}%
-          </p>
+          <p className="text-sm mb-3" style={{ color: '#6B7280' }}>{fb.note}</p>
+          {transcript !== null && (
+            <p className="text-xs" style={{ color: '#9CA3AF' }}>
+              You said:{' '}
+              <span className="devanagari font-semibold" style={{ color: '#1F3A5F' }}>
+                {transcript || '(nothing detected)'}
+              </span>
+            </p>
+          )}
         </div>
       )}
 
       {error && (
-        <p className="text-sm text-center" style={{ color: '#E74C3C' }}>
-          ⚠️ {error}
-        </p>
+        <p className="text-sm text-center" style={{ color: '#E74C3C' }}>⚠️ {error}</p>
+      )}
+
+      {/* Inline Continue — replaces the global bottom overlay for this exercise */}
+      {done && fb && (
+        <button
+          onClick={() => onResult(fb.ok)}
+          className="w-full font-bold text-white active:scale-95 transition-transform"
+          style={{
+            height: 52, borderRadius: 16, fontSize: 17, border: 'none',
+            background: fb.ok
+              ? 'linear-gradient(135deg,#52B788,#40916C)'
+              : 'linear-gradient(135deg,#FF7A00,#FFC857)',
+            boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
+            cursor: 'pointer',
+          }}
+        >
+          Continue →
+        </button>
       )}
     </div>
   )

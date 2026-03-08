@@ -17,14 +17,15 @@
 body {
   background-color: var(--cream);
   color: var(--text-dark);
-  font-family: 'Poppins', sans-serif;
+  /* Nunito: Duolingo-style rounded UI font; Poppins as headline fallback */
+  font-family: 'Nunito', 'Poppins', sans-serif;
   min-height: 100vh;
   margin: 0;
 }
 
-/* Hindi/Devanagari text */
+/* Hindi/Devanagari text — Noto Sans for perfect script rendering */
 .devanagari {
-  font-family: 'Hind', 'Noto Sans Devanagari', sans-serif;
+  font-family: 'Noto Sans Devanagari', 'Noto Sans', sans-serif;
 }
 
 /* Slide-up animation for feedback overlay */

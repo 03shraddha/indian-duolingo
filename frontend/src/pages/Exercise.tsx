@@ -125,7 +125,7 @@ export default function Exercise() {
           <ListenIdentify key={exercise.id} exercise={exercise} onResult={handleResult} />
         )}
         {exercise && exercise.type === 'speak-repeat' && (
-          <SpeakRepeat key={exercise.id} exercise={exercise} onResult={handleResult} />
+          <SpeakRepeat key={exercise.id} exercise={exercise} onResult={handleContinue} />
         )}
         {exercise && exercise.type === 'type-translation' && (
           <TypeTranslation key={exercise.id} exercise={exercise} onResult={handleResult} />
