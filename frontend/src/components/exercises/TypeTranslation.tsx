@@ -1,36 +1,33 @@
 import { useState } from 'react'
-import type { Exercise } from '../../types'
+import type { Exercise, LanguageConfig } from '../../types'
 
 interface Props {
   exercise: Exercise
+  langCfg: LanguageConfig
   onResult: (correct: boolean) => void
 }
 
-/** Normalize a Hindi string for comparison: trim, collapse spaces. */
-function normalizeHindi(s: string): string {
+/** Normalize text for comparison: trim, collapse spaces. */
+function normalizeText(s: string): string {
   return s.trim().replace(/\s+/g, ' ')
 }
 
-/** Return true if userInput matches the expected Hindi text (with minor tolerance). */
-function isCorrect(userInput: string, expected: string): boolean {
-  const u = normalizeHindi(userInput)
-  const e = normalizeHindi(expected)
+function checkCorrect(userInput: string, expected: string): boolean {
+  const u = normalizeText(userInput)
+  const e = normalizeText(expected)
   if (u === e) return true
-
-  // Accept if every character in the expected string is present in order
-  // (handles missing spaces or extra vowel marks)
-  const stripped = (s: string) => s.replace(/\s/g, '')
-  return stripped(u) === stripped(e)
+  // Accept stripped spaces too
+  return u.replace(/\s/g, '') === e.replace(/\s/g, '')
 }
 
-export default function TypeTranslation({ exercise, onResult }: Props) {
+export default function TypeTranslation({ exercise, langCfg, onResult }: Props) {
   const [input, setInput] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [correct, setCorrect] = useState(false)
 
   function handleSubmit() {
     if (!input.trim() || submitted) return
-    const result = isCorrect(input, exercise.hindiText)
+    const result = checkCorrect(input, exercise.targetText)
     setCorrect(result)
     setSubmitted(true)
     onResult(result)
@@ -39,21 +36,21 @@ export default function TypeTranslation({ exercise, onResult }: Props) {
   return (
     <div className="flex flex-col items-center gap-5 px-4 py-6 max-w-md mx-auto w-full">
       {/* Instruction */}
-      <p className="text-base font-semibold" style={{ color: '#4A4A6A' }}>
-        ✍️ Type the Hindi translation
+      <p className="text-base font-semibold" style={{ color: '#6B7280' }}>
+        ✍️ Type the translation
       </p>
 
-      {/* English phrase to translate */}
+      {/* English phrase — indigo card instead of heavy gradient */}
       <div
-        className="w-full rounded-3xl p-6 text-center shadow-md"
-        style={{ background: 'linear-gradient(135deg, #1E3A5F, #00A896)' }}
+        className="w-full rounded-3xl p-6 text-center shadow-sm"
+        style={{ background: '#1F3A5F' }}
       >
         <p className="text-3xl font-extrabold text-white">{exercise.englishText}</p>
       </div>
 
-      {/* Romanized hint */}
-      <p className="text-sm italic" style={{ color: '#C85C3A' }}>
-        Hint: {exercise.hindiRomanized}
+      {/* Romanized hint — muted terracotta */}
+      <p className="text-sm italic" style={{ color: '#E07A5F' }}>
+        Hint: {exercise.romanized}
       </p>
 
       {/* Text input */}
@@ -63,21 +60,13 @@ export default function TypeTranslation({ exercise, onResult }: Props) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-          placeholder="Type in Hindi (हिंदी में लिखें)"
+          placeholder="Type the phrase..."
           disabled={submitted}
-          className="w-full devanagari text-2xl text-center py-4 px-4 rounded-2xl border-2 outline-none transition-colors"
+          className={`w-full text-2xl text-center py-4 px-4 rounded-2xl border-2 outline-none transition-colors ${langCfg.scriptClass}`}
           style={{
-            borderColor: submitted
-              ? correct
-                ? '#00A896'
-                : '#C85C3A'
-              : '#FFB800',
-            background: submitted
-              ? correct
-                ? '#E8F8F5'
-                : '#FDECEA'
-              : 'white',
-            color: '#1A1A2E',
+            borderColor: submitted ? (correct ? '#00A896' : '#E07A5F') : '#EDE8E0',
+            background: submitted ? (correct ? '#E8F8F5' : '#FEF3EE') : 'white',
+            color: '#1F2937',
           }}
           autoCapitalize="none"
           autoCorrect="off"
@@ -87,21 +76,21 @@ export default function TypeTranslation({ exercise, onResult }: Props) {
 
       {/* Show correct answer on wrong */}
       {submitted && !correct && (
-        <p className="text-sm text-center" style={{ color: '#4A4A6A' }}>
+        <p className="text-sm text-center" style={{ color: '#6B7280' }}>
           Correct:{' '}
-          <span className="devanagari font-bold text-lg" style={{ color: '#1E3A5F' }}>
-            {exercise.hindiText}
+          <span className={`font-bold text-lg ${langCfg.scriptClass}`} style={{ color: '#1F3A5F' }}>
+            {exercise.targetText}
           </span>
         </p>
       )}
 
-      {/* Submit button */}
+      {/* Submit button — orange CTA, correct usage */}
       {!submitted && (
         <button
           onClick={handleSubmit}
           disabled={!input.trim()}
           className="w-full py-4 rounded-2xl font-bold text-lg text-white shadow active:scale-95 transition-transform disabled:opacity-40"
-          style={{ background: 'linear-gradient(135deg, #FF6B00, #FFB800)' }}
+          style={{ background: '#FF7A00', border: 'none', cursor: input.trim() ? 'pointer' : 'default' }}
         >
           Check Answer
         </button>

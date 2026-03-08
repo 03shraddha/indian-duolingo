@@ -24,7 +24,7 @@ export default function ProgressBar({ current, total }: ProgressBarProps) {
           }}
         />
       </div>
-      <span className="text-sm font-semibold" style={{ color: '#C85C3A', minWidth: '3rem', textAlign: 'right' }}>
+      <span className="text-base font-semibold" style={{ color: '#9CA3AF', minWidth: '3rem', textAlign: 'right' }}>
         {current}/{total}
       </span>
     </div>

@@ -1,34 +1,52 @@
 @import "tailwindcss";
 
-/* Indian aesthetic color tokens */
+/* ── Design tokens — Indian aesthetic, calm and breathable ────────────────── */
 :root {
-  --saffron: #FF6B00;
-  --marigold: #FFB800;
-  --indigo-deep: #1E3A5F;
-  --terracotta: #C85C3A;
-  --turquoise: #00A896;
-  --cream: #FFF8F0;
-  --success: #2ECC71;
-  --error: #E74C3C;
-  --text-dark: #1A1A2E;
-  --text-mid: #4A4A6A;
+  /* Orange is ACCENT only: CTAs, active lesson, streak indicator */
+  --accent:        #FF7A00;
+  --accent-light:  #FFF3E6;
+  --accent-border: #FFD3A3;
+
+  /* Marigold: progress fills, secondary highlights */
+  --marigold:      #FFC857;
+  --marigold-muted:#FFF8E6;
+
+  /* Indigo & charcoal: headings, body copy */
+  --indigo:        #1F3A5F;
+  --charcoal:      #1F2937;
+
+  /* Supporting Indian palette — used sparingly */
+  --terracotta:    #E07A5F;  /* error/incorrect — softer than old C85C3A */
+  --turquoise:     #00A896;  /* success/correct */
+
+  /* Neutral surfaces */
+  --cream:         #F8F5F0;  /* page background */
+  --card:          #FFFFFF;  /* card/panel background */
+  --border:        #EDE8E0;  /* subtle dividers */
+  --muted:         #9CA3AF;  /* secondary text */
+  --text-mid:      #6B7280;  /* body secondary */
 }
 
 body {
   background-color: var(--cream);
-  color: var(--text-dark);
+  color: var(--charcoal);
   /* Nunito: Duolingo-style rounded UI font; Poppins as headline fallback */
   font-family: 'Nunito', 'Poppins', sans-serif;
+  font-size: 18px;  /* bumped base — Tailwind text-sm becomes ~14px, text-base becomes 18px */
+  line-height: 1.6;
   min-height: 100vh;
   margin: 0;
 }
 
-/* Hindi/Devanagari text — Noto Sans for perfect script rendering */
-.devanagari {
-  font-family: 'Noto Sans Devanagari', 'Noto Sans', sans-serif;
-}
+/* ── Script fonts for Indian languages ───────────────────────────────────── */
+.devanagari    { font-family: 'Noto Sans Devanagari', 'Noto Sans', sans-serif; }
+.kannada-script { font-family: 'Noto Sans Kannada',   'Noto Sans', sans-serif; }
+.tamil-script   { font-family: 'Noto Sans Tamil',     'Noto Sans', sans-serif; }
+.telugu-script  { font-family: 'Noto Sans Telugu',    'Noto Sans', sans-serif; }
 
-/* Slide-up animation for feedback overlay */
+/* ── Animations ──────────────────────────────────────────────────────────── */
+
+/* Slide-up for feedback overlay */
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
@@ -49,8 +67,8 @@ body {
 
 /* Pulse glow for mic recording */
 @keyframes micPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,0,0.5); }
-  50%       { box-shadow: 0 0 0 12px rgba(255,107,0,0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,122,0,0.4); }
+  50%       { box-shadow: 0 0 0 14px rgba(255,122,0,0); }
 }
 .mic-pulse {
   animation: micPulse 1.2s ease-in-out infinite;

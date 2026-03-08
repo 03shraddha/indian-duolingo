@@ -1,6 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 import { useProgress } from '../hooks/useProgress'
-import { allLessons, units } from '../data/lessons'
+import { useLanguage } from '../hooks/useLanguage'
+import { getAllLessons, lessonsByLanguage } from '../data/lessons'
+import { LANGUAGE_CONFIG } from '../types'
+import type { Language } from '../types'
 
 /** Circular progress ring showing lesson completion */
 function ProgressRing({ pct }: { pct: number }) {
@@ -34,21 +37,20 @@ function ProgressRing({ pct }: { pct: number }) {
         <span className="text-2xl font-extrabold" style={{ color: '#1F3A5F', lineHeight: 1 }}>
           {pct}%
         </span>
-        <span className="text-xs font-medium mt-0.5" style={{ color: '#a08878' }}>done</span>
+        <span className="text-xs font-medium mt-0.5" style={{ color: '#9CA3AF' }}>done</span>
       </div>
     </div>
   )
 }
 
-/** Thin top accent strip — thin diamond-pattern band */
+/** Thin decorative top accent strip — subtle, not orange-dominant */
 function TopAccent() {
   return (
-    <div style={{ height: 7, background: '#FF7A00', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
-      {/* subtle repeating diamond dots */}
+    <div style={{ height: 5, background: '#EDE8E0', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
       <div style={{
         position: 'absolute', inset: 0,
-        backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px)',
-        backgroundSize: '14px 7px',
+        backgroundImage: 'repeating-linear-gradient(90deg, transparent 0, transparent 12px, #FFC857 12px, #FFC857 13px)',
+        opacity: 0.6,
       }} />
     </div>
   )
@@ -56,8 +58,16 @@ function TopAccent() {
 
 export default function Home() {
   const navigate = useNavigate()
-  const { progress } = useProgress()
+  const { language, clearLanguage } = useLanguage()
 
+  // Default to Hindi if somehow we land here without a language set
+  const activeLang = (language ?? 'hindi') as Language
+  const cfg = LANGUAGE_CONFIG[activeLang]
+
+  const { progress } = useProgress(activeLang)
+
+  const allLessons = getAllLessons(activeLang)
+  const units = lessonsByLanguage[activeLang]
   const totalLessons = allLessons.length
   const completedCount = progress.completedLessons.length
   const progressPct = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0
@@ -71,37 +81,38 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F8F5F0' }}>
 
-      {/* Thin top accent strip */}
+      {/* Thin decorative top accent strip */}
       <TopAccent />
 
-      {/* Subtle background mandala — 6% opacity only */}
+      {/* Subtle background mandala — 5% opacity */}
       <div
         className="fixed inset-0 pointer-events-none select-none flex items-center justify-center"
         style={{ zIndex: 0 }}
+        aria-hidden="true"
       >
-        <svg viewBox="0 0 400 400" fill="none" style={{ width: 560, height: 560, opacity: 0.06 }}>
-          {[0,45,90,135,180,225,270,315].map((deg) => (
+        <svg viewBox="0 0 400 400" fill="none" style={{ width: 560, height: 560, opacity: 0.05 }}>
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
             <ellipse key={`a${deg}`} cx="200" cy="55" rx="13" ry="30"
-              fill="#FF7A00" transform={`rotate(${deg} 200 200)`} />
+              fill="#1F3A5F" transform={`rotate(${deg} 200 200)`} />
           ))}
-          {[0,45,90,135,180,225,270,315].map((deg) => (
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
             <ellipse key={`b${deg}`} cx="200" cy="105" rx="9" ry="22"
               fill="#E07A5F" transform={`rotate(${deg} 200 200)`} />
           ))}
-          {Array.from({length:16},(_,i)=>i*22.5).map((deg) => (
+          {Array.from({ length: 16 }, (_, i) => i * 22.5).map((deg) => (
             <ellipse key={`c${deg}`} cx="200" cy="148" rx="5" ry="13"
               fill="#FFC857" transform={`rotate(${deg} 200 200)`} />
           ))}
-          <circle cx="200" cy="200" r="168" stroke="#FF7A00" strokeWidth="1.5" strokeDasharray="6 5" />
+          <circle cx="200" cy="200" r="168" stroke="#1F3A5F" strokeWidth="1.5" strokeDasharray="6 5" />
           <circle cx="200" cy="200" r="128" stroke="#FFC857" strokeWidth="1" strokeDasharray="4 4" />
           <circle cx="200" cy="200" r="88"  stroke="#E07A5F" strokeWidth="1" strokeDasharray="3 4" />
-          <circle cx="200" cy="200" r="52"  stroke="#FF7A00" strokeWidth="1.5" />
-          {[0,45,90,135,180,225,270,315].map((deg) => (
+          <circle cx="200" cy="200" r="52"  stroke="#1F3A5F" strokeWidth="1.5" />
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
             <ellipse key={`d${deg}`} cx="200" cy="167" rx="8" ry="15"
-              fill="#E07A5F" opacity="0.7" transform={`rotate(${deg} 200 200)`} />
+              fill="#E07A5F" opacity="0.6" transform={`rotate(${deg} 200 200)`} />
           ))}
-          <circle cx="200" cy="200" r="20" fill="#FFC857" opacity="0.6" />
-          <circle cx="200" cy="200" r="8"  fill="#FF7A00" />
+          <circle cx="200" cy="200" r="20" fill="#FFC857" opacity="0.5" />
+          <circle cx="200" cy="200" r="8"  fill="#1F3A5F" opacity="0.3" />
         </svg>
       </div>
 
@@ -109,49 +120,55 @@ export default function Home() {
       <div className="flex-1 flex flex-col items-center justify-center px-5 py-8 relative z-10">
         <div className="w-full" style={{ maxWidth: 380 }}>
 
-          {/* Greeting */}
+          {/* Greeting — indigo, not orange */}
           <p className="text-base font-semibold text-center mb-5"
-            style={{ color: '#FF7A00', letterSpacing: '0.02em' }}>
-            {isReturning ? '👋 Welcome back!' : '👋 Namaste! Ready for 2 minutes of Hindi?'}
+            style={{ color: '#1F3A5F', letterSpacing: '0.02em' }}>
+            {isReturning ? `👋 Welcome back!` : `👋 ${cfg.greeting}! Ready for 2 minutes of ${cfg.name}?`}
           </p>
 
           {/* Progress ring */}
           <div className="flex flex-col items-center mb-4">
             <ProgressRing pct={progressPct} />
-            <p className="text-sm mt-2 font-medium" style={{ color: '#a08878' }}>
+            <p className="text-sm mt-2 font-medium" style={{ color: '#9CA3AF' }}>
               {completedCount}/{totalLessons} lessons complete
             </p>
           </div>
 
           {/* Headline */}
-          <h1 className="text-center font-bold mb-3"
-            style={{ fontSize: 48, color: '#1F2937', lineHeight: 1.1, letterSpacing: '-0.5px' }}>
+          <h1 className="text-center font-bold mb-2"
+            style={{ fontSize: 40, color: '#1F2937', lineHeight: 1.1, letterSpacing: '-0.5px' }}>
             Indian Duolingo
           </h1>
 
-          {/* Hindi subtitle */}
-          <p className="devanagari font-semibold text-center mb-4"
-            style={{ fontSize: 24, color: '#FF7A00' }}>
-            हिंदी सीखो
+          {/* Language greeting in native script — indigo, not orange */}
+          <p className={`font-semibold text-center mb-1 ${cfg.scriptClass}`}
+            style={{ fontSize: 22, color: '#1F3A5F' }}>
+            {cfg.greeting}
+          </p>
+          <p className="text-center mb-5" style={{ fontSize: 13, color: '#9CA3AF' }}>
+            {cfg.nativeName} · {cfg.name}
           </p>
 
           {/* Punchy copy */}
-          <p className="text-center mb-6" style={{ fontSize: 19, color: '#6B7280', lineHeight: 1.6 }}>
-            Learn everyday Hindi.<br />
-            <span style={{ color: '#9CA3AF' }}>Not textbook Hindi.</span>
+          <p className="text-center mb-6" style={{ fontSize: 17, color: '#6B7280', lineHeight: 1.6 }}>
+            {cfg.subheading.split('. ').map((part, i, arr) => (
+              <span key={i}>
+                {part}{i < arr.length - 1 ? '.' : ''}<br />
+              </span>
+            ))}
           </p>
 
-          {/* Streak badge */}
+          {/* Streak badge — orange is appropriate here */}
           {progress.currentStreak > 0 && (
-            <div className="flex justify-center mb-7">
+            <div className="flex justify-center mb-6">
               <div className="flex items-center gap-3 px-5 py-3 rounded-2xl"
                 style={{ background: '#FFF3E6', border: '1px solid #FFD3A3' }}>
-                <span style={{ fontSize: 28 }}>🔥</span>
+                <span style={{ fontSize: 26 }}>🔥</span>
                 <div>
-                  <p className="font-bold" style={{ fontSize: 16, color: '#FF7A00', lineHeight: 1.2 }}>
+                  <p className="font-bold" style={{ fontSize: 15, color: '#FF7A00', lineHeight: 1.2 }}>
                     {progress.currentStreak} Day Streak
                   </p>
-                  <p style={{ fontSize: 13, color: '#a08878' }}>
+                  <p style={{ fontSize: 13, color: '#9CA3AF' }}>
                     +{progress.totalXP} XP earned
                   </p>
                 </div>
@@ -159,7 +176,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* CTA button */}
+          {/* Primary CTA — orange is correct here */}
           <button
             onClick={() => navigate('/learn')}
             className="w-full font-bold text-white active:scale-95 transition-transform"
@@ -168,10 +185,10 @@ export default function Home() {
               borderRadius: 18,
               fontSize: 18,
               background: 'linear-gradient(135deg, #FF7A00 0%, #FFB347 100%)',
-              boxShadow: '0 10px 20px rgba(255,122,0,0.25)',
+              boxShadow: '0 8px 20px rgba(255,122,0,0.22)',
               border: 'none',
               cursor: 'pointer',
-              marginBottom: 24,
+              marginBottom: 16,
             }}
           >
             {isReturning ? 'Continue Learning →' : 'Start Learning →'}
@@ -182,18 +199,18 @@ export default function Home() {
             <div
               className="flex items-center gap-3 px-4 py-3 rounded-2xl mb-6"
               style={{
-                background: 'white',
+                background: '#FFFFFF',
                 border: '1px solid #EDE8E0',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
               }}
             >
               <div className="flex-shrink-0 text-2xl w-10 h-10 flex items-center justify-center rounded-xl"
-                style={{ background: '#FFF3E0' }}>
+                style={{ background: '#F8F5F0' }}>
                 {nextUnit?.emoji ?? '📖'}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-wide mb-0.5"
-                  style={{ color: '#a08878' }}>
+                  style={{ color: '#9CA3AF' }}>
                   Up Next
                 </p>
                 <p className="text-sm font-bold truncate" style={{ color: '#1F2937' }}>
@@ -203,18 +220,33 @@ export default function Home() {
                   {nextLesson.exercises.length} exercises · ~2 minutes
                 </p>
               </div>
-              <span style={{ color: '#FFC857', fontSize: 20 }}>›</span>
+              {/* Subtle chevron — muted, not orange */}
+              <span style={{ color: '#9CA3AF', fontSize: 20 }}>›</span>
             </div>
           )}
 
           {/* Trust indicators */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 mb-6">
             {['5 minute lessons', 'No signup required', 'Works in your browser'].map((t) => (
               <div key={t} className="flex items-center gap-2">
                 <span style={{ color: '#52B788', fontSize: 13 }}>✔</span>
                 <span className="text-sm" style={{ color: '#9CA3AF' }}>{t}</span>
               </div>
             ))}
+          </div>
+
+          {/* Change language — subtle link */}
+          <div className="flex justify-center">
+            <button
+              onClick={() => {
+                clearLanguage()
+                navigate('/')
+              }}
+              className="text-sm font-medium"
+              style={{ color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              Change language →
+            </button>
           </div>
 
         </div>

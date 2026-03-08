@@ -1,28 +1,31 @@
 import { useCallback, useState } from 'react'
-import type { Progress } from '../types'
+import type { Language, Progress } from '../types'
 
-const STORAGE_KEY = 'idl-progress'
 const XP_PER_LESSON = 10
+
+function storageKey(language: Language): string {
+  return `idl-progress-${language}`
+}
 
 function today(): string {
   return new Date().toISOString().split('T')[0]
 }
 
-function loadProgress(): Progress {
+function loadProgress(language: Language): Progress {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(storageKey(language))
     if (raw) return JSON.parse(raw) as Progress
   } catch { /* ignore */ }
   return { completedLessons: [], currentStreak: 0, lastPlayedDate: '', totalXP: 0 }
 }
 
-function saveProgress(p: Progress) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(p))
+function saveProgress(language: Language, p: Progress) {
+  localStorage.setItem(storageKey(language), JSON.stringify(p))
 }
 
-/** React hook for reading and writing progress to localStorage. */
-export function useProgress() {
-  const [progress, setProgress] = useState<Progress>(loadProgress)
+/** React hook for reading and writing per-language progress to localStorage. */
+export function useProgress(language: Language) {
+  const [progress, setProgress] = useState<Progress>(() => loadProgress(language))
 
   /** Mark a lesson as complete, award XP, update streak. */
   const completeLesson = useCallback((lessonId: string) => {
@@ -50,10 +53,10 @@ export function useProgress() {
         lastPlayedDate: todayStr,
         totalXP: prev.totalXP + XP_PER_LESSON,
       }
-      saveProgress(next)
+      saveProgress(language, next)
       return next
     })
-  }, [])
+  }, [language])
 
   const isCompleted = useCallback(
     (lessonId: string) => progress.completedLessons.includes(lessonId),
