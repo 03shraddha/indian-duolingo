@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+/* Indian aesthetic color tokens */
+:root {
+  --saffron: #FF6B00;
+  --marigold: #FFB800;
+  --indigo-deep: #1E3A5F;
+  --terracotta: #C85C3A;
+  --turquoise: #00A896;
+  --cream: #FFF8F0;
+  --success: #2ECC71;
+  --error: #E74C3C;
+  --text-dark: #1A1A2E;
+  --text-mid: #4A4A6A;
+}
+
+body {
+  background-color: var(--cream);
+  color: var(--text-dark);
+  font-family: 'Poppins', sans-serif;
+  min-height: 100vh;
+  margin: 0;
+}
+
+/* Hindi/Devanagari text */
+.devanagari {
+  font-family: 'Hind', 'Noto Sans Devanagari', sans-serif;
+}
+
+/* Slide-up animation for feedback overlay */
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.slide-up {
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+/* Bounce for correct answer sparkle */
+@keyframes bounceIn {
+  0%   { transform: scale(0.5); opacity: 0; }
+  60%  { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.bounce-in {
+  animation: bounceIn 0.4s ease-out forwards;
+}
+
+/* Pulse glow for mic recording */
+@keyframes micPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,0,0.5); }
+  50%       { box-shadow: 0 0 0 12px rgba(255,107,0,0); }
+}
+.mic-pulse {
+  animation: micPulse 1.2s ease-in-out infinite;
+}
+
+/* Progress bar fill transition */
+.progress-fill {
+  transition: width 0.4s ease;
+}
