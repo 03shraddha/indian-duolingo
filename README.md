@@ -1,4 +1,4 @@
-# BhaashaPath — Learn Indian Languages
+# Indian Duolingo — Learn Indian Languages
 
 A Duolingo-style language learning app for India, powered by [Sarvam AI](https://sarvam.ai) APIs.
 **V1 scope:** English → Hindi, browser-based, no login required.

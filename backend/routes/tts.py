@@ -11,12 +11,11 @@ class TTSRequest(BaseModel):
     language_code: str = "hi-IN"
     speaker: str = "anushka"
     pace: float = 1.0
-    temperature: float = 0.6
 
 
 @router.post("/tts")
 async def text_to_speech(req: TTSRequest):
-    """Convert text to speech using Sarvam bulbul:v3."""
+    """Convert text to speech using Sarvam bulbul:v2."""
     client = SarvamAI(api_subscription_key=os.getenv("SARVAM_API_KEY"))
     try:
         response = client.text_to_speech.convert(
@@ -24,8 +23,7 @@ async def text_to_speech(req: TTSRequest):
             target_language_code=req.language_code,
             speaker=req.speaker,
             pace=req.pace,
-            temperature=req.temperature,
-            model="bulbul:v3",
+            model="bulbul:v2",
         )
         # response.audios[0] is already a base64-encoded string
         return {"audio_base64": response.audios[0]}

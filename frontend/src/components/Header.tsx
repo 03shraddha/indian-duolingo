@@ -26,7 +26,7 @@ export default function Header({ showBack = false }: HeaderProps) {
         ) : (
           <>
             <span className="text-2xl">🇮🇳</span>
-            <span>BhaashaPath</span>
+            <span>Indian Duolingo</span>
           </>
         )}
       </button>

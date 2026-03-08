@@ -9,7 +9,6 @@ export interface TTSOptions {
   language_code?: string
   speaker?: string
   pace?: number
-  temperature?: number
 }
 
 /**
@@ -25,7 +24,6 @@ export async function tts(opts: TTSOptions): Promise<string> {
       language_code: opts.language_code ?? 'hi-IN',
       speaker: opts.speaker ?? 'anushka',
       pace: opts.pace ?? 1.0,
-      temperature: opts.temperature ?? 0.6,
     }),
   })
   if (!res.ok) {
