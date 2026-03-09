@@ -38,7 +38,7 @@ body {
   color: var(--charcoal);
   /* Nunito: Duolingo-style rounded UI font; Poppins as headline fallback */
   font-family: 'Nunito', 'Poppins', sans-serif;
-  font-size: 18px;  /* bumped base — Tailwind text-sm becomes ~14px, text-base becomes 18px */
+  font-size: 15px;  /* base — Tailwind text-sm becomes ~12px, text-base becomes 15px */
   line-height: 1.6;
   min-height: 100vh;
   margin: 0;

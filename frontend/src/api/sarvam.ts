@@ -1,6 +1,8 @@
 /** Fetch wrappers for the FastAPI backend (which calls Sarvam AI APIs). */
 
-const BASE = '/api'
+// In production, set VITE_API_URL to your deployed backend URL (e.g. https://your-app.railway.app)
+// In development, falls back to '/api' which Vite proxies to localhost:8000
+const BASE = (import.meta.env.VITE_API_URL ?? '/api') + ''
 
 // ── Text-to-Speech ────────────────────────────────────────────────────────────
 
