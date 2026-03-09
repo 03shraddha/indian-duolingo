@@ -29,13 +29,13 @@ function similarity(a: string, b: string): number {
 const PASS = 0.50
 
 function qualitativeFeedback(score: number, target: string) {
-  if (score >= 0.85) return { ok: true,  label: 'Excellent! 🎉', note: 'Your pronunciation is spot on.' }
-  if (score >= 0.65) return { ok: true,  label: 'Good try! 👍',  note: `Focus on the sounds in "${target}" more carefully.` }
-  if (score >= PASS)  return { ok: true,  label: 'Almost there!', note: 'Listen once more and speak slowly.' }
-  return               { ok: false, label: 'Keep practising 💪', note: 'Try listening a few times, then speak.' }
+  if (score >= 0.85) return { ok: true,  label: '🎉 Excellent!',       note: 'Your pronunciation is spot on.' }
+  if (score >= 0.65) return { ok: true,  label: '👍 Good try!',        note: `Focus on the sounds in "${target}" more carefully.` }
+  if (score >= PASS)  return { ok: true,  label: '🌱 Almost there!',   note: 'Listen once more and speak slowly.' }
+  return               { ok: false, label: '💪 Keep practising',       note: 'Try listening a few times, then speak.' }
 }
 
-/** 4-bar waveform animation — shown during TTS playback */
+/** 4-bar waveform animation */
 function WaveformBars({ color = '#FFC857' }: { color?: string }) {
   const heights = [14, 22, 18, 12]
   return (
@@ -64,7 +64,6 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
   const recorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef   = useRef<Blob[]>([])
 
-  /** Wraps play() to set playing state — drives card animation */
   const playWithFeedback = useCallback(async (base64: string) => {
     setPlaying(true)
     try { await play(base64) } finally { setPlaying(false) }
@@ -137,47 +136,92 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
   const fb   = score !== null ? qualitativeFeedback(score, exercise.targetText) : null
   const done = score !== null && !processing
 
+  // Card colors shift when result is in
+  const cardBg     = done && fb ? (fb.ok ? '#EFF4EF' : '#FEF3EE') : '#FFFFFF'
+  const cardBorder = done && fb
+    ? (fb.ok ? '2px solid #C4D6C4' : '2px solid #F0C4B4')
+    : playing ? '2px solid #FFC857' : '1.5px solid #EDE8E0'
+  const cardShadow = done && fb
+    ? (fb.ok
+        ? '0 0 0 4px rgba(196,214,196,0.2), 0 6px 20px rgba(0,0,0,0.06)'
+        : '0 0 0 4px rgba(240,196,180,0.2), 0 6px 20px rgba(0,0,0,0.06)')
+    : playing
+      ? '0 0 0 4px rgba(255,200,87,0.18), 0 6px 20px rgba(0,0,0,0.07)'
+      : '0 6px 20px rgba(0,0,0,0.07)'
+
   return (
     <div className="flex flex-col items-center px-4 py-6 max-w-md mx-auto w-full" style={{ gap: 16 }}>
 
-      {/* Instruction — lowercase, conversational */}
+      {/* Instruction */}
       <p className="font-semibold" style={{ fontSize: 17, color: '#6B7280' }}>
         tap the card to hear it, then repeat
       </p>
 
-      {/* Phrase card — animated border + waveform when playing */}
+      {/* Word card — transforms into result card when done */}
       <button
         onClick={() => audioBase64 && playWithFeedback(audioBase64)}
         disabled={loadingTTS}
         className="w-full rounded-3xl text-center disabled:opacity-60"
         style={{
-          background: '#FFFFFF',
-          border: playing ? '2px solid #FFC857' : '1.5px solid #EDE8E0',
-          boxShadow: playing
-            ? '0 0 0 4px rgba(255,200,87,0.18), 0 6px 20px rgba(0,0,0,0.07)'
-            : '0 6px 20px rgba(0,0,0,0.07)',
-          padding: '24px 24px 20px',
+          background: cardBg,
+          border: cardBorder,
+          boxShadow: cardShadow,
+          padding: '20px 24px 20px',
           cursor: loadingTTS ? 'default' : 'pointer',
-          transition: 'border 0.2s ease, box-shadow 0.3s ease',
+          transition: 'border 0.25s ease, box-shadow 0.3s ease, background 0.25s ease',
         }}
       >
-        <div className="flex justify-end mb-2" style={{ height: 24 }}>
-          {playing
-            ? <WaveformBars color="#FFC857" />
-            : <span style={{ color: '#FFC857', fontSize: 18 }}>{loadingTTS ? '⏳' : '🔊'}</span>
-          }
+        {/* Top row: result label (when done) OR waveform/speaker icon */}
+        <div className="flex items-center justify-between mb-2" style={{ height: 28 }}>
+          {done && fb ? (
+            <span className="font-bold" style={{ fontSize: 16, color: fb.ok ? '#4A7459' : '#E07A5F' }}>
+              {fb.label}
+            </span>
+          ) : (
+            <span /> /* spacer */
+          )}
+          <span>
+            {playing
+              ? <WaveformBars color={done && fb ? (fb.ok ? '#7A9E82' : '#E07A5F') : '#FFC857'} />
+              : <span style={{ color: done && fb ? (fb.ok ? '#7A9E82' : '#E07A5F') : '#FFC857', fontSize: 18 }}>
+                  {loadingTTS ? '⏳' : '🔊'}
+                </span>
+            }
+          </span>
         </div>
+
+        {/* Script text */}
         <p className={`font-bold mb-2 ${langCfg.scriptClass}`}
           style={{ fontSize: 44, color: '#1F3A5F', lineHeight: 1.2 }}>
           {exercise.targetText}
         </p>
+
+        {/* Romanized */}
         <p className="font-medium mb-1" style={{ fontSize: 18, color: '#E07A5F', fontStyle: 'italic' }}>
           {exercise.romanized}
         </p>
+
+        {/* English */}
         <p style={{ fontSize: 13, color: '#9CA3AF' }}>{exercise.englishText}</p>
+
+        {/* Result details — shown inside card after scoring */}
+        {done && fb && (
+          <>
+            <div style={{ height: 1, background: fb.ok ? '#C4D6C4' : '#F0C4B4', margin: '12px 0 10px' }} />
+            <p className="text-sm text-left" style={{ color: '#6B7280' }}>{fb.note}</p>
+            {transcript !== null && (
+              <p className="text-xs text-left mt-2" style={{ color: '#9CA3AF' }}>
+                you said:{' '}
+                <span className={`font-semibold ${langCfg.scriptClass}`} style={{ color: '#1F3A5F' }}>
+                  {transcript || '(nothing detected)'}
+                </span>
+              </p>
+            )}
+          </>
+        )}
       </button>
 
-      {/* Speed segmented control + mic — grouped together, tight gap */}
+      {/* Speed + mic controls — hidden after result */}
       {!done && (
         <div className="flex flex-col items-center" style={{ gap: 14 }}>
 
@@ -211,7 +255,7 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
             })}
           </div>
 
-          {/* Mic — directly below speed control */}
+          {/* Mic */}
           <button
             onMouseDown={startRecording}
             onMouseUp={stopRecording}
@@ -234,37 +278,15 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
           >
             {processing ? '⏳' : recording ? '⏹' : '🎤'}
           </button>
-          {/* lowercase mic state label */}
           <p className="text-xs font-medium" style={{ color: '#9CA3AF', marginTop: -8 }}>
             {processing ? 'analysing…' : recording ? 'release to stop' : 'hold to record'}
           </p>
         </div>
       )}
 
-      {done && fb && (
-        <div className="w-full rounded-2xl px-5 py-4"
-          style={{
-            background: fb.ok ? '#EFF4EF' : '#FEF3EE',
-            border: `1.5px solid ${fb.ok ? '#C4D6C4' : '#F0C4B4'}`,
-          }}
-        >
-          <p className="font-bold text-base mb-1" style={{ color: fb.ok ? '#4A7459' : '#E07A5F' }}>
-            {fb.label}
-          </p>
-          <p className="text-sm mb-3" style={{ color: '#6B7280' }}>{fb.note}</p>
-          {transcript !== null && (
-            <p className="text-xs" style={{ color: '#9CA3AF' }}>
-              You said:{' '}
-              <span className={`font-semibold ${langCfg.scriptClass}`} style={{ color: '#1F3A5F' }}>
-                {transcript || '(nothing detected)'}
-              </span>
-            </p>
-          )}
-        </div>
-      )}
-
       {error && <p className="text-sm text-center" style={{ color: '#E07A5F' }}>⚠️ {error}</p>}
 
+      {/* Continue button — appears after result */}
       {done && fb && (
         <button
           onClick={() => onResult(fb.ok)}
