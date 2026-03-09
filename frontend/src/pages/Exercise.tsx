@@ -1,8 +1,7 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Header from '../components/Header'
 import ProgressBar from '../components/ProgressBar'
-import FeedbackOverlay from '../components/FeedbackOverlay'
 import ListenIdentify from '../components/exercises/ListenIdentify'
 import SpeakRepeat from '../components/exercises/SpeakRepeat'
 import TypeTranslation from '../components/exercises/TypeTranslation'
@@ -28,18 +27,12 @@ export default function Exercise() {
   const lesson = lessonId ? getLessonById(lessonId, activeLang) : null
 
   const [currentIdx, setCurrentIdx] = useState(0)
-  const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null)
   const [finished, setFinished] = useState(false)
   const [showExitModal, setShowExitModal] = useState(false)
 
   const exercise: ExerciseType | undefined = lesson?.exercises[currentIdx]
 
-  const handleResult = useCallback((correct: boolean) => {
-    setFeedback(correct ? 'correct' : 'incorrect')
-  }, [])
-
   function handleContinue() {
-    setFeedback(null)
     if (!lesson) return
     const nextIdx = currentIdx + 1
     if (nextIdx >= lesson.exercises.length) {
@@ -85,7 +78,7 @@ export default function Exercise() {
             style={{ background: '#1F3A5F', border: 'none', cursor: 'pointer' }}>
             ← All Lessons
           </button>
-          <button onClick={() => { setCurrentIdx(0); setFinished(false); setFeedback(null) }}
+          <button onClick={() => { setCurrentIdx(0); setFinished(false) }}
             className="px-6 py-4 rounded-2xl font-bold shadow active:scale-95 transition-transform"
             style={{ background: '#FFFFFF', color: '#1F3A5F', border: '1.5px solid #EDE8E0', cursor: 'pointer' }}>
             Practice Again 🔄
@@ -146,22 +139,15 @@ export default function Exercise() {
       </div>
       <div className="flex-1 overflow-y-auto">
         {exercise && exercise.type === 'listen-identify' && (
-          <ListenIdentify key={exercise.id} exercise={exercise} langCfg={langCfg} onResult={handleResult} />
+          <ListenIdentify key={exercise.id} exercise={exercise} langCfg={langCfg} onResult={handleContinue} />
         )}
         {exercise && exercise.type === 'speak-repeat' && (
           <SpeakRepeat key={exercise.id} exercise={exercise} langCfg={langCfg} onResult={handleContinue} />
         )}
         {exercise && exercise.type === 'type-translation' && (
-          <TypeTranslation key={exercise.id} exercise={exercise} langCfg={langCfg} onResult={handleResult} />
+          <TypeTranslation key={exercise.id} exercise={exercise} langCfg={langCfg} onResult={handleContinue} />
         )}
       </div>
-      <FeedbackOverlay
-        result={feedback}
-        correctAnswer={exercise?.targetText ?? ''}
-        scriptClass={langCfg.scriptClass}
-        wellDoneText={langCfg.wellDoneText}
-        onContinue={handleContinue}
-      />
     </div>
   )
 }

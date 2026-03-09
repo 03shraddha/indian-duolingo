@@ -212,6 +212,24 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
           )
         })}
       </div>
+
+      {/* Continue button — appears after selection, replaces bottom overlay */}
+      {selected && (
+        <button
+          onClick={() => onResult(selected === exercise.englishText)}
+          className="w-full font-bold text-white active:scale-95 transition-transform"
+          style={{
+            height: 52, borderRadius: 16, fontSize: 17, border: 'none',
+            background: selected === exercise.englishText
+              ? 'linear-gradient(135deg,#4A7459,#7A9E82)'
+              : '#FF7A00',
+            boxShadow: '0 6px 16px rgba(0,0,0,0.10)',
+            cursor: 'pointer',
+          }}
+        >
+          Continue →
+        </button>
+      )}
     </div>
   )
 }

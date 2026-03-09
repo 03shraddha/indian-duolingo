@@ -30,7 +30,6 @@ export default function TypeTranslation({ exercise, langCfg, onResult }: Props) 
     const result = checkCorrect(input, exercise.targetText)
     setCorrect(result)
     setSubmitted(true)
-    onResult(result)
   }
 
   return (
@@ -84,8 +83,8 @@ export default function TypeTranslation({ exercise, langCfg, onResult }: Props) 
         </p>
       )}
 
-      {/* Submit button — orange CTA, correct usage */}
-      {!submitted && (
+      {/* Submit / Continue button */}
+      {!submitted ? (
         <button
           onClick={handleSubmit}
           disabled={!input.trim()}
@@ -93,6 +92,19 @@ export default function TypeTranslation({ exercise, langCfg, onResult }: Props) 
           style={{ background: '#FF7A00', border: 'none', cursor: input.trim() ? 'pointer' : 'default' }}
         >
           Check Answer
+        </button>
+      ) : (
+        <button
+          onClick={() => onResult(correct)}
+          className="w-full font-bold text-white active:scale-95 transition-transform"
+          style={{
+            height: 52, borderRadius: 16, fontSize: 17, border: 'none',
+            background: correct ? 'linear-gradient(135deg,#4A7459,#7A9E82)' : '#FF7A00',
+            boxShadow: '0 6px 16px rgba(0,0,0,0.10)',
+            cursor: 'pointer',
+          }}
+        >
+          Continue →
         </button>
       )}
     </div>
