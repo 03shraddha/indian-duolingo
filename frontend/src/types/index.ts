@@ -32,7 +32,7 @@ export interface Progress {
 
 // ── Multi-language support ────────────────────────────────────────────────────
 
-export type Language = 'hindi' | 'kannada' | 'tamil' | 'telugu'
+export type Language = 'hindi' | 'kannada' | 'tamil' | 'telugu' | 'bengali' | 'marathi'
 
 export interface LanguageConfig {
   name: string              // "Hindi"
@@ -53,7 +53,7 @@ export const LANGUAGE_CONFIG: Record<Language, LanguageConfig> = {
     greeting: 'नमस्ते',
     subheading: 'Learn everyday Hindi. Not textbook Hindi.',
     languageCode: 'hi-IN',
-    ttsDefaultSpeaker: 'anushka',
+    ttsDefaultSpeaker: 'priya',
     scriptClass: 'devanagari',
     emoji: '🙏',
     wellDoneText: 'शाबाश!',
@@ -64,7 +64,7 @@ export const LANGUAGE_CONFIG: Record<Language, LanguageConfig> = {
     greeting: 'ನಮಸ್ಕಾರ',
     subheading: 'Learn everyday Kannada. Not textbook Kannada.',
     languageCode: 'kn-IN',
-    ttsDefaultSpeaker: 'kavitha',
+    ttsDefaultSpeaker: 'priya',
     scriptClass: 'kannada-script',
     emoji: '🌸',
     wellDoneText: 'ಶಾಬಾಶ್!',
@@ -75,7 +75,7 @@ export const LANGUAGE_CONFIG: Record<Language, LanguageConfig> = {
     greeting: 'வணக்கம்',
     subheading: 'Learn everyday Tamil. Not textbook Tamil.',
     languageCode: 'ta-IN',
-    ttsDefaultSpeaker: 'kavitha',
+    ttsDefaultSpeaker: 'ritu',
     scriptClass: 'tamil-script',
     emoji: '🌺',
     wellDoneText: 'சாபாஷ்!',
@@ -86,9 +86,31 @@ export const LANGUAGE_CONFIG: Record<Language, LanguageConfig> = {
     greeting: 'నమస్కారం',
     subheading: 'Learn everyday Telugu. Not textbook Telugu.',
     languageCode: 'te-IN',
-    ttsDefaultSpeaker: 'kavitha',
+    ttsDefaultSpeaker: 'neha',
     scriptClass: 'telugu-script',
     emoji: '🌼',
     wellDoneText: 'శభాష్!',
+  },
+  bengali: {
+    name: 'Bengali',
+    nativeName: 'বাংলা',
+    greeting: 'নমস্কার',
+    subheading: 'Learn everyday Bengali. Not textbook Bengali.',
+    languageCode: 'bn-IN',
+    ttsDefaultSpeaker: 'kavitha',
+    scriptClass: 'bengali-script',
+    emoji: '🌿',
+    wellDoneText: 'শাবাশ!',
+  },
+  marathi: {
+    name: 'Marathi',
+    nativeName: 'मराठी',
+    greeting: 'नमस्कार',
+    subheading: 'Learn everyday Marathi. Not textbook Marathi.',
+    languageCode: 'mr-IN',
+    ttsDefaultSpeaker: 'priya',
+    scriptClass: 'devanagari',
+    emoji: '🪷',
+    wellDoneText: 'शाब्बास!',
   },
 }

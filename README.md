@@ -22,12 +22,14 @@ No account needed. Works in your browser. Takes 2–5 minutes per lesson.
 | **Kannada** | ಕನ್ನಡ | ನಮಸ್ಕಾರ |
 | **Tamil** | தமிழ் | வணக்கம் |
 | **Telugu** | తెలుగు | నమస్కారం |
+| **Bengali** | বাংলা | নমস্কার |
+| **Marathi** | मराठी | नमस्कार |
 
 ---
 
 ## How It Works
 
-**1. Pick your language** — Choose from Hindi, Kannada, Tamil, or Telugu.
+**1. Pick your language** — Choose from Hindi, Kannada, Tamil, Telugu, Bengali, or Marathi.
 
 **2. Follow the lesson path** — Lessons are organized into units. Each lesson takes about 2 minutes and contains 5–6 exercises.
 
@@ -55,7 +57,7 @@ No account needed. Works in your browser. Takes 2–5 minutes per lesson.
 
 The interface is warm, minimal, and distinctly Indian — without being loud. A soft cream background gives breathing space. Orange is reserved for key actions only (the Continue button, active lessons, streak badges). Cultural identity comes from subtle mandala motifs at low opacity, not heavy decoration.
 
-Script fonts are used for every language (Noto Sans Devanagari, Kannada, Tamil, Telugu), so phrases render beautifully alongside their Roman transliterations.
+Script fonts are used for every language (Noto Sans Devanagari, Kannada, Tamil, Telugu, Bengali), so phrases render beautifully alongside their Roman transliterations.
 
 ---
 
@@ -72,9 +74,9 @@ Script fonts are used for every language (Noto Sans Devanagari, Kannada, Tamil, 
 | Frontend | React 19 + TypeScript + Vite + Tailwind CSS 4 |
 | Backend | Python FastAPI + Sarvam AI SDK (`sarvamai`) |
 | Storage | `localStorage` — no database, no auth |
-| TTS | Sarvam `bulbul:v3` — Hindi, Kannada, Tamil, Telugu |
+| TTS | Sarvam `bulbul:v3` — all 6 languages |
 | STT | Sarvam `saarika:v2.5` — speech-to-text for pronunciation scoring |
-| Fonts | Nunito (UI), Noto Sans (all 4 scripts) |
+| Fonts | Nunito (UI), Noto Sans (Devanagari, Kannada, Tamil, Telugu, Bengali) |
 
 ## Running Locally
 
@@ -117,12 +119,14 @@ Open http://localhost:5173. Vite proxies `/api/*` → `localhost:8000` automatic
 
 | Language | Code | TTS Speaker |
 |----------|------|-------------|
-| Hindi | `hi-IN` | `anushka` |
-| Kannada | `kn-IN` | `kavitha` |
-| Tamil | `ta-IN` | `kavitha` |
-| Telugu | `te-IN` | `kavitha` |
+| Hindi | `hi-IN` | `priya` |
+| Kannada | `kn-IN` | `priya` |
+| Tamil | `ta-IN` | `ritu` |
+| Telugu | `te-IN` | `neha` |
+| Bengali | `bn-IN` | `kavitha` |
+| Marathi | `mr-IN` | `priya` |
 
-Valid bulbul:v2 speakers (full list from API): `anushka`, `abhilash`, `manisha`, `vidya`, `arya`, `karun`, `hitesh`, `aditya`, `ritu`, `priya`, `neha`, `rahul`, `pooja`, `rohan`, `simran`, `kavya`, `amit`, `dev`, `ishita`, `shreya`, `ratan`, `varun`, `manan`, `sumit`, `roopa`, `kabir`, `aayan`, `shubh`, `ashutosh`, `advait`, `amelia`, `sophia`, `anand`, `tanya`, `tarun`, `sunny`, `mani`, `gokul`, `vijay`, `shruti`, `suhani`, `mohit`, `kavitha`, `rehan`, `soham`, `rupali`
+> **Note:** Uses `bulbul:v3`. Valid v3 speakers include: `priya`, `ritu`, `neha`, `kavitha`, `aditya`, `shubh`, `rahul`, `rohan`, `manisha`, `vidya`, `arya`, `karun`, `hitesh`, `pooja`, `simran`, `kavya`, `amit`, `dev`, `ishita`, `shreya`, `varun`, `manan`, `sumit`, `roopa`, `kabir`, `aayan`, `advait`, `tarun`, `sunny`, `mani`, `vijay`, `shruti`, `suhani`, `mohit`, `soham` and others. `anushka` and `abhilash` are **v2-only** and will fail with v3.
 
 ## Project Structure
 
@@ -144,7 +148,9 @@ india-duolingo/
 │       │   ├── lessons-hindi.ts    # 9 lessons, 3 units
 │       │   ├── lessons-kannada.ts  # 3 lessons, 1 unit
 │       │   ├── lessons-tamil.ts    # 3 lessons, 1 unit
-│       │   └── lessons-telugu.ts   # 3 lessons, 1 unit
+│       │   ├── lessons-telugu.ts   # 3 lessons, 1 unit
+│       │   ├── lessons-bengali.ts  # 3 lessons, 1 unit
+│       │   └── lessons-marathi.ts  # 3 lessons, 1 unit
 │       ├── hooks/
 │       │   ├── useLanguage.ts      # Selected language (localStorage)
 │       │   ├── useProgress.ts      # Per-language progress (localStorage)
@@ -203,7 +209,7 @@ Progress is stored per language in localStorage:
 
 ## Notes
 
-- TTS uses `bulbul:v3` (45 speakers, supports all 4 languages)
-- `type-translation` exercise only appears in Hindi content — other languages are voice-first (no regional keyboard assumed)
+- TTS uses `bulbul:v3` — supports all 6 languages
+- `type-translation` exercise only appears in Hindi content — all other languages are voice-first (no regional keyboard assumed)
 - Press-and-hold mic recording works on both desktop (mousedown/mouseup) and mobile (touchstart/touchend)
 - All lessons are unlocked — no progression gates

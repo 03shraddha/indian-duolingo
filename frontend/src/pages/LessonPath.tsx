@@ -30,7 +30,7 @@ function LessonCard({ lesson, lessonNum, status, onClick }: {
   const icon = LESSON_ICONS[lesson.title] ?? '📖'
   const estMins = Math.max(2, Math.round(lesson.exercises.length * 0.4))
   const styles: Record<LessonStatus, { bg: string; border: string; iconBg: string; shadow: string }> = {
-    done: { bg: '#F0FAF5', border: '1.5px solid #B7E4C7', iconBg: '#D8F3DC', shadow: '0 4px 12px rgba(82,183,136,0.08)' },
+    done: { bg: '#EFF4EF', border: '1.5px solid #C4D6C4', iconBg: '#D6E9D6', shadow: '0 4px 12px rgba(74,116,89,0.07)' },
     recommended: { bg: '#FFFFFF', border: '2px solid #FF7A00', iconBg: '#FFF3E6', shadow: '0 8px 24px rgba(255,122,0,0.12)' },
     available: { bg: '#FFFFFF', border: '1px solid #EDE8E0', iconBg: '#F8F5F0', shadow: '0 4px 12px rgba(0,0,0,0.04)' },
   }
@@ -55,7 +55,7 @@ function LessonCard({ lesson, lessonNum, status, onClick }: {
       </div>
       <div className="flex-shrink-0 flex flex-col items-end gap-1.5">
         {status === 'done' && (
-          <><span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#D8F3DC', color: '#52B788', border: '1px solid #B7E4C7' }}>Done ✓</span><span className="text-xs" style={{ color: '#B7E4C7' }}>+10 XP</span></>
+          <><span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#D6E9D6', color: '#4A7459', border: '1px solid #C4D6C4' }}>Done ✓</span><span className="text-xs" style={{ color: '#7A9E82' }}>+10 XP</span></>
         )}
         {status === 'recommended' && <span className="text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: '#FF7A00' }}>Next →</span>}
         {status === 'available' && <span style={{ color: '#D0C8C0', fontSize: 20, lineHeight: '1' }}>›</span>}
@@ -69,7 +69,7 @@ function UnitProgress({ total, done }: { total: number; done: number }) {
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#EDE8E0' }}>
-        <div className="h-full rounded-full progress-fill" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#FFC857,#FFB347)' }} />
+        <div className="h-full rounded-full progress-fill" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#7A9E82,#4A7459)' }} />
       </div>
       <span className="text-xs font-semibold" style={{ color: '#9CA3AF', whiteSpace: 'nowrap' }}>{done}/{total}</span>
     </div>
@@ -88,7 +88,32 @@ export default function LessonPath() {
   const recommendedLesson = allLessons.find((l) => !isCompleted(l.id))
 
   return (
-    <div className="min-h-screen" style={{ background: '#F8F5F0' }}>
+    <div className="min-h-screen" style={{ background: '#F8F5F0', position: 'relative' }}>
+      {/* Faint mandala backdrop — same as Home, 4% opacity */}
+      <div className="fixed inset-0 pointer-events-none select-none flex items-center justify-center"
+        style={{ zIndex: 0 }} aria-hidden="true">
+        <svg viewBox="0 0 400 400" fill="none" style={{ width: 820, height: 820, opacity: 0.04 }}>
+          {[0,45,90,135,180,225,270,315].map((deg) => (
+            <ellipse key={`a${deg}`} cx="200" cy="55" rx="13" ry="30" fill="#1F3A5F" transform={`rotate(${deg} 200 200)`} />
+          ))}
+          {[0,45,90,135,180,225,270,315].map((deg) => (
+            <ellipse key={`b${deg}`} cx="200" cy="105" rx="9" ry="22" fill="#E07A5F" transform={`rotate(${deg} 200 200)`} />
+          ))}
+          {Array.from({ length: 16 }, (_, i) => i * 22.5).map((deg) => (
+            <ellipse key={`c${deg}`} cx="200" cy="148" rx="5" ry="13" fill="#FFC857" transform={`rotate(${deg} 200 200)`} />
+          ))}
+          <circle cx="200" cy="200" r="168" stroke="#1F3A5F" strokeWidth="1.5" strokeDasharray="6 5" />
+          <circle cx="200" cy="200" r="128" stroke="#FFC857" strokeWidth="1" strokeDasharray="4 4" />
+          <circle cx="200" cy="200" r="88"  stroke="#E07A5F" strokeWidth="1" strokeDasharray="3 4" />
+          <circle cx="200" cy="200" r="52"  stroke="#1F3A5F" strokeWidth="1.5" />
+          {[0,45,90,135,180,225,270,315].map((deg) => (
+            <ellipse key={`d${deg}`} cx="200" cy="167" rx="8" ry="15" fill="#E07A5F" opacity="0.6" transform={`rotate(${deg} 200 200)`} />
+          ))}
+          <circle cx="200" cy="200" r="20" fill="#FFC857" opacity="0.5" />
+          <circle cx="200" cy="200" r="8"  fill="#1F3A5F" opacity="0.3" />
+        </svg>
+      </div>
+      <div style={{ position: 'relative', zIndex: 1 }}>
       <Header />
       <main className="max-w-lg mx-auto px-4 pt-6 pb-28">
         <div className="flex items-center justify-between mb-6">
@@ -110,11 +135,13 @@ export default function LessonPath() {
           const unitDone = unit.lessons.filter((l) => isCompleted(l.id)).length
           return (
             <section key={unit.id} className="mb-10">
-              <div className="flex items-center gap-3 mb-2">
+              {/* Unit header — sage-light to signal a grouped section */}
+              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl mb-4"
+                style={{ background: '#EFF4EF', border: '1px solid #C4D6C4' }}>
                 <span className="text-2xl">{unit.emoji}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#9CA3AF' }}>Unit {uIdx + 1}</p>
-                  <h2 className="text-lg font-extrabold" style={{ color: '#1F3A5F' }}>{unit.title}</h2>
+                  <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#7A9E82' }}>Unit {uIdx + 1}</p>
+                  <h2 className="text-lg font-extrabold" style={{ color: '#4A7459' }}>{unit.title}</h2>
                 </div>
               </div>
               <div className="mb-5"><UnitProgress total={unit.lessons.length} done={unitDone} /></div>
@@ -144,6 +171,7 @@ export default function LessonPath() {
           )
         })}
       </main>
+      </div>
     </div>
   )
 }

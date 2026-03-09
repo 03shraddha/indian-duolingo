@@ -83,8 +83,8 @@ export const units: Unit[] = [
             id: 'kn-e9',
             type: 'speak-repeat',
             englishText: 'Sorry',
-            targetText: 'ಕ್ಷಮಿಸಿ',
-            romanized: 'Kshamisi',
+            targetText: 'ಸಾರಿ',
+            romanized: 'Saari',
           },
           {
             id: 'kn-e10',
@@ -112,9 +112,9 @@ export const units: Unit[] = [
           {
             id: 'kn-e12',
             type: 'speak-repeat',
-            englishText: 'Speak slowly please',
-            targetText: 'ನಿಧಾನವಾಗಿ ಮಾತಾಡಿ',
-            romanized: 'Nidhaanavaagi maataadi',
+            englishText: 'Come here',
+            targetText: 'ಇಲ್ಲಿ ಬಾ',
+            romanized: 'Illi baa',
           },
           {
             id: 'kn-e13',
@@ -127,9 +127,9 @@ export const units: Unit[] = [
           {
             id: 'kn-e14',
             type: 'speak-repeat',
-            englishText: 'Where is the bathroom?',
-            targetText: 'ಶೌಚಾಲಯ ಎಲ್ಲಿದೆ?',
-            romanized: 'Shouchalaya ellide?',
+            englishText: 'Where is the toilet?',
+            targetText: 'ಟಾಯ್ಲೆಟ್ ಎಲ್ಲಿದೆ?',
+            romanized: 'Toilet ellide?',
           },
           {
             id: 'kn-e15',

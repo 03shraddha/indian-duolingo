@@ -90,7 +90,7 @@ export default function Home() {
         style={{ zIndex: 0 }}
         aria-hidden="true"
       >
-        <svg viewBox="0 0 400 400" fill="none" style={{ width: 560, height: 560, opacity: 0.05 }}>
+        <svg viewBox="0 0 400 400" fill="none" style={{ width: 820, height: 820, opacity: 0.04 }}>
           {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
             <ellipse key={`a${deg}`} cx="200" cy="55" rx="13" ry="30"
               fill="#1F3A5F" transform={`rotate(${deg} 200 200)`} />
@@ -176,19 +176,20 @@ export default function Home() {
             </div>
           )}
 
-          {/* Primary CTA — orange is correct here */}
+          {/* Primary CTA — full-bleed, 56px min, only action on screen */}
           <button
             onClick={() => navigate('/learn')}
             className="w-full font-bold text-white active:scale-95 transition-transform"
             style={{
-              height: 56,
+              height: 60,
               borderRadius: 18,
-              fontSize: 18,
+              fontSize: 19,
               background: 'linear-gradient(135deg, #FF7A00 0%, #FFB347 100%)',
-              boxShadow: '0 8px 20px rgba(255,122,0,0.22)',
+              boxShadow: '0 8px 24px rgba(255,122,0,0.28)',
               border: 'none',
               cursor: 'pointer',
               marginBottom: 16,
+              letterSpacing: '0.01em',
             }}
           >
             {isReturning ? 'Continue Learning →' : 'Start Learning →'}
@@ -228,7 +229,7 @@ export default function Home() {
           {/* Trust indicators */}
           <div className="flex flex-col gap-2 mb-6">
             {['5 minute lessons', 'No signup required', 'Works in your browser'].map((t) => (
-              <div key={t} className="flex items-center gap-2">
+              <div key={t} className="flex items-center justify-center gap-2">
                 <span style={{ color: '#52B788', fontSize: 13 }}>✔</span>
                 <span className="text-sm" style={{ color: '#9CA3AF' }}>{t}</span>
               </div>

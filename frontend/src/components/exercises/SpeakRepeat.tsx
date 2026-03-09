@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { tts, stt } from '../../api/sarvam'
 import { useAudio } from '../../hooks/useAudio'
 import type { Exercise, LanguageConfig } from '../../types'
@@ -6,11 +6,6 @@ import type { Exercise, LanguageConfig } from '../../types'
 interface Props {
   exercise: Exercise
   langCfg: LanguageConfig
-  /**
-   * Called when user clicks Continue after reviewing inline feedback.
-   * SpeakRepeat manages its own feedback — the global FeedbackOverlay
-   * is not used for this exercise type.
-   */
   onResult: (correct: boolean) => void
 }
 
@@ -40,11 +35,25 @@ function qualitativeFeedback(score: number, target: string) {
   return               { ok: false, label: 'Keep practising 💪', note: 'Try listening a few times, then speak.' }
 }
 
+/** 4-bar waveform animation — shown during TTS playback */
+function WaveformBars({ color = '#FFC857' }: { color?: string }) {
+  const heights = [14, 22, 18, 12]
+  return (
+    <div className="flex items-end gap-1" style={{ height: 24, color }}>
+      {heights.map((h, i) => (
+        <span key={i} className="wave-bar" style={{ height: h }} />
+      ))}
+    </div>
+  )
+}
+
 export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
   const { play } = useAudio()
   const [audioBase64, setAudioBase64] = useState<string | null>(null)
   const [audioSlow,   setAudioSlow]   = useState<string | null>(null)
   const [loadingTTS,  setLoadingTTS]  = useState(true)
+  const [playing,     setPlaying]     = useState(false)
+  const [activeSpeed, setActiveSpeed] = useState<'normal' | 'slow'>('normal')
 
   const [recording,  setRecording]  = useState(false)
   const [processing, setProcessing] = useState(false)
@@ -55,18 +64,22 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
   const recorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef   = useRef<Blob[]>([])
 
-  // Load both normal and slow TTS on mount, then auto-play normal
+  /** Wraps play() to set playing state — drives card animation */
+  const playWithFeedback = useCallback(async (base64: string) => {
+    setPlaying(true)
+    try { await play(base64) } finally { setPlaying(false) }
+  }, [play])
+
   useEffect(() => {
     let cancelled = false
     setLoadingTTS(true)
     setScore(null)
     setTranscript(null)
     setError(null)
+    setPlaying(false)
+    setActiveSpeed('normal')
 
-    const ttsOpts = {
-      language_code: langCfg.languageCode,
-      speaker: langCfg.ttsDefaultSpeaker,
-    }
+    const ttsOpts = { language_code: langCfg.languageCode, speaker: langCfg.ttsDefaultSpeaker }
 
     Promise.all([
       tts({ text: exercise.targetText, ...ttsOpts, pace: 1.0 }),
@@ -77,15 +90,19 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
         setAudioBase64(normal)
         setAudioSlow(slow)
         setLoadingTTS(false)
-        return play(normal)
+        return playWithFeedback(normal)
       })
-      .catch((e) => {
-        if (!cancelled) { setError(e.message); setLoadingTTS(false) }
-      })
+      .catch((e) => { if (!cancelled) { setError(e.message); setLoadingTTS(false) } })
 
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exercise.id])
+
+  function handleSpeedToggle(speed: 'normal' | 'slow') {
+    setActiveSpeed(speed)
+    const audio = speed === 'slow' ? audioSlow : audioBase64
+    if (audio) playWithFeedback(audio)
+  }
 
   async function startRecording() {
     if (recording || processing) return
@@ -94,7 +111,6 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
       const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
       chunksRef.current = []
       recorderRef.current = recorder
-
       recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }
       recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop())
@@ -107,16 +123,11 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
           setScore(similarity(text, exercise.targetText))
         } catch (e: unknown) {
           setError(e instanceof Error ? e.message : 'STT failed')
-        } finally {
-          setProcessing(false)
-        }
+        } finally { setProcessing(false) }
       }
-
       recorder.start()
       setRecording(true)
-    } catch {
-      setError('Microphone access denied.')
-    }
+    } catch { setError('Microphone access denied.') }
   }
 
   function stopRecording() {
@@ -127,64 +138,80 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
   const done = score !== null && !processing
 
   return (
-    <div className="flex flex-col items-center gap-5 px-4 py-6 max-w-md mx-auto w-full">
+    <div className="flex flex-col items-center px-4 py-6 max-w-md mx-auto w-full" style={{ gap: 16 }}>
 
-      {/* Instruction */}
-      <p className="text-sm font-semibold" style={{ color: '#6B7280' }}>
-        Tap the card to hear it, then repeat
+      {/* Instruction — lowercase, conversational */}
+      <p className="font-semibold" style={{ fontSize: 17, color: '#6B7280' }}>
+        tap the card to hear it, then repeat
       </p>
 
-      {/* Phrase card — tappable */}
+      {/* Phrase card — animated border + waveform when playing */}
       <button
-        onClick={() => audioBase64 && play(audioBase64)}
+        onClick={() => audioBase64 && playWithFeedback(audioBase64)}
         disabled={loadingTTS}
-        className="w-full rounded-3xl text-center active:scale-98 transition-transform disabled:opacity-60"
+        className="w-full rounded-3xl text-center disabled:opacity-60"
         style={{
-          background: '#FFFFFF', border: '1.5px solid #EDE8E0',
-          boxShadow: '0 6px 20px rgba(0,0,0,0.07)', padding: '28px 24px',
+          background: '#FFFFFF',
+          border: playing ? '2px solid #FFC857' : '1.5px solid #EDE8E0',
+          boxShadow: playing
+            ? '0 0 0 4px rgba(255,200,87,0.18), 0 6px 20px rgba(0,0,0,0.07)'
+            : '0 6px 20px rgba(0,0,0,0.07)',
+          padding: '24px 24px 20px',
           cursor: loadingTTS ? 'default' : 'pointer',
+          transition: 'border 0.2s ease, box-shadow 0.3s ease',
         }}
       >
-        <div className="flex justify-end mb-1">
-          <span style={{ color: '#FFC857', fontSize: 18 }}>{loadingTTS ? '⏳' : '🔊'}</span>
+        <div className="flex justify-end mb-2" style={{ height: 24 }}>
+          {playing
+            ? <WaveformBars color="#FFC857" />
+            : <span style={{ color: '#FFC857', fontSize: 18 }}>{loadingTTS ? '⏳' : '🔊'}</span>
+          }
         </div>
-        {/* Target language phrase — dominant */}
         <p className={`font-bold mb-2 ${langCfg.scriptClass}`}
           style={{ fontSize: 44, color: '#1F3A5F', lineHeight: 1.2 }}>
           {exercise.targetText}
         </p>
-        {/* Romanization — muted terracotta, softer than orange */}
-        <p className="font-medium mb-1"
-          style={{ fontSize: 18, color: '#E07A5F', fontStyle: 'italic' }}>
+        <p className="font-medium mb-1" style={{ fontSize: 18, color: '#E07A5F', fontStyle: 'italic' }}>
           {exercise.romanized}
         </p>
-        {/* English — smallest */}
         <p style={{ fontSize: 13, color: '#9CA3AF' }}>{exercise.englishText}</p>
       </button>
 
-      {/* Replay row: normal + slow */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => audioBase64 && play(audioBase64)}
-          disabled={!audioBase64}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold active:scale-95 transition-transform disabled:opacity-40"
-          style={{ background: '#FFF3E6', color: '#FF7A00', border: '1px solid #FFD3A3', cursor: 'pointer' }}
-        >
-          🔊 Normal
-        </button>
-        <button
-          onClick={() => audioSlow && play(audioSlow)}
-          disabled={!audioSlow}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold active:scale-95 transition-transform disabled:opacity-40"
-          style={{ background: '#F8F5F0', color: '#6B7280', border: '1px solid #EDE8E0', cursor: 'pointer' }}
-        >
-          🐢 Slow
-        </button>
-      </div>
-
-      {/* Press-and-hold mic */}
+      {/* Speed segmented control + mic — grouped together, tight gap */}
       {!done && (
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center" style={{ gap: 14 }}>
+
+          {/* Segmented pill: ▶▶ Normal | ▶ Slow */}
+          <div
+            className="flex rounded-full overflow-hidden"
+            style={{ border: '1.5px solid #EDE8E0', background: '#F8F5F0', opacity: loadingTTS ? 0.5 : 1 }}
+          >
+            {(['normal', 'slow'] as const).map((speed) => {
+              const active = activeSpeed === speed
+              return (
+                <button
+                  key={speed}
+                  onClick={() => !loadingTTS && handleSpeedToggle(speed)}
+                  disabled={loadingTTS}
+                  className="flex items-center gap-1.5 px-5 py-2 text-sm font-semibold transition-all"
+                  style={{
+                    background: active ? '#1F3A5F' : 'transparent',
+                    color: active ? '#FFFFFF' : '#9CA3AF',
+                    border: 'none',
+                    cursor: 'pointer',
+                    borderRadius: speed === 'normal' ? '999px 0 0 999px' : '0 999px 999px 0',
+                  }}
+                >
+                  <span style={{ fontSize: 11, opacity: 0.75 }}>
+                    {speed === 'normal' ? '▶▶' : '▶'}
+                  </span>
+                  {speed === 'normal' ? 'Normal' : 'Slow'}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Mic — directly below speed control */}
           <button
             onMouseDown={startRecording}
             onMouseUp={stopRecording}
@@ -207,23 +234,21 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
           >
             {processing ? '⏳' : recording ? '⏹' : '🎤'}
           </button>
-          <p className="text-xs font-medium" style={{ color: '#9CA3AF' }}>
-            {processing ? 'Analysing…' : recording ? 'Release to stop' : 'Hold to record'}
+          {/* lowercase mic state label */}
+          <p className="text-xs font-medium" style={{ color: '#9CA3AF', marginTop: -8 }}>
+            {processing ? 'analysing…' : recording ? 'release to stop' : 'hold to record'}
           </p>
         </div>
       )}
 
-      {/* Inline qualitative feedback */}
       {done && fb && (
-        <div
-          className="w-full rounded-2xl px-5 py-4"
+        <div className="w-full rounded-2xl px-5 py-4"
           style={{
-            background: fb.ok ? '#F0FAF5' : '#FEF3EE',
-            border: `1.5px solid ${fb.ok ? '#B7E4C7' : '#F0C4B4'}`,
+            background: fb.ok ? '#EFF4EF' : '#FEF3EE',
+            border: `1.5px solid ${fb.ok ? '#C4D6C4' : '#F0C4B4'}`,
           }}
         >
-          <p className="font-bold text-base mb-1"
-            style={{ color: fb.ok ? '#52B788' : '#E07A5F' }}>
+          <p className="font-bold text-base mb-1" style={{ color: fb.ok ? '#4A7459' : '#E07A5F' }}>
             {fb.label}
           </p>
           <p className="text-sm mb-3" style={{ color: '#6B7280' }}>{fb.note}</p>
@@ -238,18 +263,15 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
         </div>
       )}
 
-      {error && (
-        <p className="text-sm text-center" style={{ color: '#E07A5F' }}>⚠️ {error}</p>
-      )}
+      {error && <p className="text-sm text-center" style={{ color: '#E07A5F' }}>⚠️ {error}</p>}
 
-      {/* Continue */}
       {done && fb && (
         <button
           onClick={() => onResult(fb.ok)}
           className="w-full font-bold text-white active:scale-95 transition-transform"
           style={{
             height: 52, borderRadius: 16, fontSize: 17, border: 'none',
-            background: fb.ok ? 'linear-gradient(135deg,#52B788,#40916C)' : '#FF7A00',
+            background: fb.ok ? 'linear-gradient(135deg,#4A7459,#7A9E82)' : '#FF7A00',
             boxShadow: '0 6px 16px rgba(0,0,0,0.10)',
             cursor: 'pointer',
           }}

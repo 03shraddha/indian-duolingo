@@ -36,8 +36,8 @@ export default function TypeTranslation({ exercise, langCfg, onResult }: Props) 
   return (
     <div className="flex flex-col items-center gap-5 px-4 py-6 max-w-md mx-auto w-full">
       {/* Instruction */}
-      <p className="text-base font-semibold" style={{ color: '#6B7280' }}>
-        ✍️ Type the translation
+      <p className="font-semibold" style={{ fontSize: 17, color: '#6B7280' }}>
+        ✍️ type the translation
       </p>
 
       {/* English phrase — indigo card instead of heavy gradient */}

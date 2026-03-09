@@ -83,8 +83,8 @@ export const units: Unit[] = [
             id: 'te-e9',
             type: 'speak-repeat',
             englishText: 'Sorry',
-            targetText: 'క్షమించండి',
-            romanized: 'Kshaminchaandi',
+            targetText: 'సారీ',
+            romanized: 'Saari',
           },
           {
             id: 'te-e10',
@@ -112,9 +112,9 @@ export const units: Unit[] = [
           {
             id: 'te-e12',
             type: 'speak-repeat',
-            englishText: 'Speak slowly please',
-            targetText: 'నెమ్మదిగా మాట్లాడండి',
-            romanized: 'Nemmadiga maatlaadandi',
+            englishText: 'Come here',
+            targetText: 'ఇక్కడికి రా',
+            romanized: 'Ikkadiki raa',
           },
           {
             id: 'te-e13',

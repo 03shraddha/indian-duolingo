@@ -83,8 +83,8 @@ export const units: Unit[] = [
             id: 'ta-e9',
             type: 'speak-repeat',
             englishText: 'Sorry',
-            targetText: 'மன்னிக்கவும்',
-            romanized: 'Mannikavum',
+            targetText: 'மன்னிக்கணும்',
+            romanized: 'Mannikanum',
           },
           {
             id: 'ta-e10',
@@ -112,9 +112,9 @@ export const units: Unit[] = [
           {
             id: 'ta-e12',
             type: 'speak-repeat',
-            englishText: 'Speak slowly please',
-            targetText: 'மெதுவாக பேசுங்கள்',
-            romanized: 'Methuvaaga pesungal',
+            englishText: 'Come here',
+            targetText: 'இங்க வாங்க',
+            romanized: 'Inga vaanga',
           },
           {
             id: 'ta-e13',
@@ -127,9 +127,9 @@ export const units: Unit[] = [
           {
             id: 'ta-e14',
             type: 'speak-repeat',
-            englishText: 'Where is the bathroom?',
-            targetText: 'கழிவறை எங்கே?',
-            romanized: 'Kazhivadai enge?',
+            englishText: 'Where is the toilet?',
+            targetText: 'டாய்லெட் எங்க?',
+            romanized: 'Toilet enga?',
           },
           {
             id: 'ta-e15',

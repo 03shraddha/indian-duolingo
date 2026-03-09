@@ -6,9 +6,11 @@ import type { Language } from '../types'
 interface HeaderProps {
   /** Show a back arrow instead of the logo */
   showBack?: boolean
+  /** Override the default back navigation (e.g. to show a confirmation modal) */
+  onBack?: () => void
 }
 
-export default function Header({ showBack = false }: HeaderProps) {
+export default function Header({ showBack = false, onBack }: HeaderProps) {
   const navigate = useNavigate()
   const { language } = useLanguage()
   const activeLang = (language ?? 'hindi') as Language
@@ -25,7 +27,13 @@ export default function Header({ showBack = false }: HeaderProps) {
     >
       {/* Left: back arrow or logo */}
       <button
-        onClick={() => (showBack ? navigate(-1) : navigate('/home'))}
+        onClick={() => {
+          if (showBack) {
+            onBack ? onBack() : navigate(-1)
+          } else {
+            navigate('/home')
+          }
+        }}
         className="flex items-center gap-2 font-bold text-lg active:opacity-70 transition-opacity"
         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1F3A5F' }}
       >

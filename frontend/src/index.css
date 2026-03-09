@@ -19,6 +19,12 @@
   --terracotta:    #E07A5F;  /* error/incorrect — softer than old C85C3A */
   --turquoise:     #00A896;  /* success/correct */
 
+  /* Natural greens — balance warmth with calm growth tones */
+  --sage:          #7A9E82;  /* muted forest sage — unit headers, achievement states */
+  --sage-light:    #EFF4EF;  /* very light sage — unit container backgrounds */
+  --sage-border:   #C4D6C4;  /* sage border/divider */
+  --forest:        #4A7459;  /* deeper green — text on sage backgrounds */
+
   /* Neutral surfaces */
   --cream:         #F8F5F0;  /* page background */
   --card:          #FFFFFF;  /* card/panel background */
@@ -39,10 +45,11 @@ body {
 }
 
 /* ── Script fonts for Indian languages ───────────────────────────────────── */
-.devanagari    { font-family: 'Noto Sans Devanagari', 'Noto Sans', sans-serif; }
+.devanagari     { font-family: 'Noto Sans Devanagari', 'Noto Sans', sans-serif; }
 .kannada-script { font-family: 'Noto Sans Kannada',   'Noto Sans', sans-serif; }
 .tamil-script   { font-family: 'Noto Sans Tamil',     'Noto Sans', sans-serif; }
 .telugu-script  { font-family: 'Noto Sans Telugu',    'Noto Sans', sans-serif; }
+.bengali-script { font-family: 'Noto Sans Bengali',   'Noto Sans', sans-serif; }
 
 /* ── Animations ──────────────────────────────────────────────────────────── */
 
@@ -78,3 +85,20 @@ body {
 .progress-fill {
   transition: width 0.4s ease;
 }
+
+/* Animated waveform bars — shown on phrase card during TTS playback */
+@keyframes waveBar {
+  0%, 100% { transform: scaleY(0.35); }
+  50%       { transform: scaleY(1); }
+}
+.wave-bar {
+  display: inline-block;
+  width: 4px;
+  border-radius: 2px;
+  background: currentColor;
+  animation: waveBar 0.9s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+.wave-bar:nth-child(2) { animation-delay: 0.15s; }
+.wave-bar:nth-child(3) { animation-delay: 0.30s; }
+.wave-bar:nth-child(4) { animation-delay: 0.15s; }

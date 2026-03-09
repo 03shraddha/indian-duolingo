@@ -10,7 +10,7 @@ const STORAGE_KEY = 'idl-language'
 export function useLanguage() {
   const [language, setLanguageState] = useState<Language | null>(() => {
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored === 'hindi' || stored === 'kannada' || stored === 'tamil' || stored === 'telugu') {
+    if (stored === 'hindi' || stored === 'kannada' || stored === 'tamil' || stored === 'telugu' || stored === 'bengali' || stored === 'marathi') {
       return stored as Language
     }
     return null

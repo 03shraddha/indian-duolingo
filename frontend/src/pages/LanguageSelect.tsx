@@ -39,7 +39,7 @@ function MandalaBg() {
   )
 }
 
-const LANGUAGES: Language[] = ['hindi', 'kannada', 'tamil', 'telugu']
+const LANGUAGES: Language[] = ['hindi', 'kannada', 'tamil', 'telugu', 'bengali', 'marathi']
 
 export default function LanguageSelect() {
   const navigate = useNavigate()

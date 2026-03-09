@@ -30,6 +30,7 @@ export default function Exercise() {
   const [currentIdx, setCurrentIdx] = useState(0)
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null)
   const [finished, setFinished] = useState(false)
+  const [showExitModal, setShowExitModal] = useState(false)
 
   const exercise: ExerciseType | undefined = lesson?.exercises[currentIdx]
 
@@ -75,7 +76,7 @@ export default function Exercise() {
           {langCfg.wellDoneText}
         </p>
         <div className="px-6 py-3 rounded-2xl font-bold text-xl shadow-sm"
-          style={{ background: '#FFF3E6', color: '#FF7A00', border: '1.5px solid #FFD3A3' }}>
+          style={{ background: '#EFF4EF', color: '#4A7459', border: '1.5px solid #C4D6C4' }}>
           +10 XP earned ⭐
         </div>
         <div className="flex gap-3 mt-4">
@@ -97,7 +98,46 @@ export default function Exercise() {
   // ── Active exercise ────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F8F5F0' }}>
-      <Header showBack />
+      <Header showBack onBack={() => setShowExitModal(true)} />
+      {showExitModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-6"
+          style={{ background: 'rgba(31,58,95,0.45)', backdropFilter: 'blur(2px)' }}
+        >
+          <div className="w-full max-w-sm rounded-3xl p-6 flex flex-col gap-4 shadow-2xl"
+            style={{ background: '#FFFFFF' }}>
+            <h2 className="text-xl font-extrabold text-center" style={{ color: '#1F3A5F' }}>
+              Leave this lesson?
+            </h2>
+            <p className="text-sm text-center" style={{ color: '#9CA3AF' }}>
+              Your progress in this lesson will not be saved.
+            </p>
+            <div className="flex flex-col gap-3 mt-2">
+              <button
+                onClick={() => { setShowExitModal(false); navigate('/') }}
+                className="w-full py-4 rounded-2xl font-bold text-white active:scale-95 transition-transform"
+                style={{ background: '#1F3A5F', border: 'none', cursor: 'pointer', fontSize: '1rem' }}
+              >
+                Change Language
+              </button>
+              <button
+                onClick={() => { setShowExitModal(false); navigate('/home') }}
+                className="w-full py-4 rounded-2xl font-bold active:scale-95 transition-transform"
+                style={{ background: '#F8F5F0', color: '#1F3A5F', border: '1.5px solid #EDE8E0', cursor: 'pointer', fontSize: '1rem' }}
+              >
+                Go to Home
+              </button>
+              <button
+                onClick={() => setShowExitModal(false)}
+                className="w-full py-3 font-semibold active:opacity-70 transition-opacity"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', fontSize: '0.95rem' }}
+              >
+                Cancel — keep learning
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <ProgressBar current={currentIdx} total={lesson.exercises.length} />
       <div className="px-4 pt-2 pb-1">
         <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#9CA3AF' }}>
