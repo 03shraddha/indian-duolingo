@@ -132,10 +132,19 @@ export default function Exercise() {
         </div>
       )}
       <ProgressBar current={currentIdx} total={lesson.exercises.length} />
-      <div className="px-4 pt-2 pb-1">
+      <div className="px-4 pt-2 pb-1 flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#9CA3AF' }}>
           {lesson.title}
         </p>
+        {currentIdx > 0 && (
+          <button
+            onClick={() => setCurrentIdx(currentIdx - 1)}
+            className="text-xs font-semibold"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}
+          >
+            ← prev
+          </button>
+        )}
       </div>
       <div className="flex-1 overflow-y-auto">
         {exercise && exercise.type === 'listen-identify' && (

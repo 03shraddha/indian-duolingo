@@ -213,7 +213,33 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
         })}
       </div>
 
-      {/* Continue button — appears after selection, replaces bottom overlay */}
+      {/* Inline feedback — appears after selection */}
+      {selected && (() => {
+        const isCorrect = selected === exercise.englishText
+        return (
+          <div
+            className="w-full rounded-2xl px-4 py-3 flex items-center gap-3"
+            style={{
+              background: isCorrect ? '#EFF4EF' : '#FEF3EE',
+              border: `1.5px solid ${isCorrect ? '#C4D6C4' : '#F0C4B4'}`,
+            }}
+          >
+            <span style={{ fontSize: 22 }}>{isCorrect ? '✅' : '❌'}</span>
+            <div>
+              <p className="font-bold text-sm" style={{ color: isCorrect ? '#4A7459' : '#E07A5F' }}>
+                {isCorrect ? '🎉 Correct!' : 'Not quite…'}
+              </p>
+              {!isCorrect && (
+                <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>
+                  Answer: <span className={`font-bold ${langCfg.scriptClass}`} style={{ color: '#1F3A5F' }}>{exercise.targetText}</span>
+                </p>
+              )}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* Continue button */}
       {selected && (
         <button
           onClick={() => onResult(selected === exercise.englishText)}
