@@ -176,7 +176,7 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
       <button
         onClick={() => !loading && audioBase64 && playWithReveal(audioBase64)}
         disabled={loading}
-        className="w-full rounded-3xl text-center disabled:opacity-60"
+        className="exercise-card w-full rounded-3xl text-center disabled:opacity-60"
         style={{
           background: '#FFFFFF',
           border: playing ? '2px solid #FFC857' : '1.5px solid #EDE8E0',

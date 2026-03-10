@@ -60,6 +60,23 @@ body {
 .telugu-script  { font-family: 'Noto Sans Telugu',    'Noto Sans', sans-serif; }
 .bengali-script { font-family: 'Noto Sans Bengali',   'Noto Sans', sans-serif; }
 
+/* ── Large font-size mode ─────────────────────────────────────────────────── */
+/* Toggled via <html data-fontsize="large"> — set by the useFontSize hook */
+[data-fontsize="large"] body {
+  font-size: 17px; /* up from 15px — scales all rem/text-* based sizes */
+}
+
+/* Exercise script word cards: override the clamp() inline styles.
+   .exercise-card is added to the word card button in ListenIdentify
+   and SpeakRepeat. !important is required to win over inline styles. */
+[data-fontsize="large"] .exercise-card .devanagari,
+[data-fontsize="large"] .exercise-card .kannada-script,
+[data-fontsize="large"] .exercise-card .tamil-script,
+[data-fontsize="large"] .exercise-card .telugu-script,
+[data-fontsize="large"] .exercise-card .bengali-script {
+  font-size: clamp(34px, 11vw, 54px) !important;
+}
+
 /* ── Animations ──────────────────────────────────────────────────────────── */
 
 /* Slide-up for feedback overlay */

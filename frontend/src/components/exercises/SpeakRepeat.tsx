@@ -172,7 +172,7 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
       <button
         onClick={() => audioBase64 && playWithFeedback(audioBase64)}
         disabled={loadingTTS}
-        className="w-full rounded-3xl text-center disabled:opacity-60"
+        className="exercise-card w-full rounded-3xl text-center disabled:opacity-60"
         style={{
           background: cardBg,
           border: cardBorder,

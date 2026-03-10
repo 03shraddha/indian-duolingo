@@ -4,6 +4,10 @@ import Home from './pages/Home'
 import LessonPath from './pages/LessonPath'
 import Exercise from './pages/Exercise'
 
+// Apply saved font-size preference before first render so there's no flash
+const savedFontSize = localStorage.getItem('idl-font-size') ?? 'normal'
+document.documentElement.setAttribute('data-fontsize', savedFontSize)
+
 function App() {
   return (
     <BrowserRouter>

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../hooks/useLanguage'
 import { useProgress } from '../hooks/useProgress'
+import { useFontSize } from '../hooks/useFontSize'
 import type { Language } from '../types'
 
 interface HeaderProps {
@@ -15,6 +16,7 @@ export default function Header({ showBack = false, onBack }: HeaderProps) {
   const { language } = useLanguage()
   const activeLang = (language ?? 'hindi') as Language
   const { progress } = useProgress(activeLang)
+  const { fontSize, toggleFontSize } = useFontSize()
 
   return (
     <header
@@ -48,8 +50,23 @@ export default function Header({ showBack = false, onBack }: HeaderProps) {
         )}
       </button>
 
-      {/* Right: streak + XP */}
+      {/* Right: font-size toggle + streak + XP */}
       <div className="flex items-center gap-2">
+        {/* Aa — font size toggle. Active state uses indigo fill. */}
+        <button
+          onClick={toggleFontSize}
+          title={fontSize === 'large' ? 'Switch to normal text' : 'Switch to large text'}
+          className="flex items-center px-2 py-1 rounded-full text-xs font-bold transition-all active:scale-95"
+          style={{
+            background: fontSize === 'large' ? '#1F3A5F' : '#F0EDE8',
+            color: fontSize === 'large' ? '#FFFFFF' : '#9CA3AF',
+            border: `1px solid ${fontSize === 'large' ? '#1F3A5F' : '#EDE8E0'}`,
+            cursor: 'pointer',
+            letterSpacing: '0.02em',
+          }}
+        >
+          Aa
+        </button>
         {/* Streak — orange is appropriate here (key motivator) */}
         {progress.currentStreak > 0 && (
           <span
