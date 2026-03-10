@@ -47,20 +47,20 @@ export default function LanguageSelect() {
 
   function handleSelect(lang: Language) {
     setLanguage(lang)
-    navigate('/learn')
+    navigate('/home')
   }
 
   return (
     <div className="min-h-screen flex flex-col relative" style={{ background: '#F8F5F0' }}>
       <MandalaBg />
 
-      <div className="flex-1 flex flex-col items-center justify-center px-5 py-10 relative z-10">
-        <div className="w-full" style={{ maxWidth: 420 }}>
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 relative z-10">
+        <div className="w-full max-w-sm sm:max-w-[420px]">
 
           {/* Header */}
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
             <div className="text-5xl mb-4">🇮🇳</div>
-            <h1 className="font-extrabold mb-2" style={{ fontSize: 28, color: '#1F2937', letterSpacing: '-0.3px' }}>
+            <h1 className="font-extrabold mb-2 text-2xl sm:text-[28px]" style={{ color: '#1F2937', letterSpacing: '-0.3px' }}>
               Choose your language
             </h1>
             {/* Sub-heading in Devanagari */}
@@ -70,7 +70,7 @@ export default function LanguageSelect() {
           </div>
 
           {/* Language cards — 2×2 grid */}
-          <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-8">
             {LANGUAGES.map((lang) => {
               const cfg = LANGUAGE_CONFIG[lang]
               return (
@@ -82,7 +82,7 @@ export default function LanguageSelect() {
                     background: '#FFFFFF',
                     border: '1.5px solid #EDE8E0',
                     borderRadius: 18,
-                    padding: '24px 16px',
+                    padding: '16px 12px',
                     boxShadow: '0 4px 16px rgba(0,0,0,0.05)',
                     cursor: 'pointer',
                     transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease',
@@ -101,22 +101,22 @@ export default function LanguageSelect() {
                   }}
                 >
                   {/* Emoji */}
-                  <span style={{ fontSize: 36, marginBottom: 10 }}>{cfg.emoji}</span>
+                  <span style={{ fontSize: 30, marginBottom: 8 }}>{cfg.emoji}</span>
 
                   {/* Language name in English */}
-                  <p className="font-bold mb-1" style={{ fontSize: 16, color: '#1F2937' }}>
+                  <p className="font-bold mb-1 text-sm sm:text-base" style={{ color: '#1F2937' }}>
                     {cfg.name}
                   </p>
 
                   {/* Native script name */}
-                  <p className={`font-semibold mb-2 ${cfg.scriptClass}`}
-                    style={{ fontSize: 18, color: '#1F3A5F' }}>
+                  <p className={`font-semibold mb-1.5 ${cfg.scriptClass}`}
+                    style={{ fontSize: 16, color: '#1F3A5F' }}>
                     {cfg.nativeName}
                   </p>
 
                   {/* Greeting phrase */}
                   <p className={`font-medium ${cfg.scriptClass}`}
-                    style={{ fontSize: 13, color: '#9CA3AF' }}>
+                    style={{ fontSize: 12, color: '#9CA3AF' }}>
                     {cfg.greeting}
                   </p>
                 </button>

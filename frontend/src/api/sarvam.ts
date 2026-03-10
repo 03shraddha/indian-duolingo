@@ -13,12 +13,24 @@ export interface TTSOptions {
   pace?: number
 }
 
+// In-memory TTS cache — keyed by all request params.
+// Caches the Promise itself so concurrent calls for the same audio share one request.
+const ttsCache = new Map<string, Promise<string>>()
+
+function ttsCacheKey(opts: TTSOptions): string {
+  return `${opts.text}:${opts.language_code ?? 'hi-IN'}:${opts.speaker ?? 'anushka'}:${opts.pace ?? 1.0}`
+}
+
 /**
  * Convert text to speech.
  * Returns a base64-encoded audio string (WAV, bulbul:v3).
+ * Results are cached in memory — replay and next-exercise preloads are instant.
  */
 export async function tts(opts: TTSOptions): Promise<string> {
-  const res = await fetch(`${BASE}/tts`, {
+  const key = ttsCacheKey(opts)
+  if (ttsCache.has(key)) return ttsCache.get(key)!
+
+  const promise = fetch(`${BASE}/tts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -28,12 +40,32 @@ export async function tts(opts: TTSOptions): Promise<string> {
       pace: opts.pace ?? 1.0,
     }),
   })
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.detail ?? `TTS failed (${res.status})`)
-  }
-  const data = await res.json()
-  return data.audio_base64 as string
+    .then(async (res) => {
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.detail ?? `TTS failed (${res.status})`)
+      }
+      const data = await res.json()
+      return data.audio_base64 as string
+    })
+    .catch((err) => {
+      // Remove failed entries so retries can succeed
+      ttsCache.delete(key)
+      throw err
+    })
+
+  ttsCache.set(key, promise)
+  return promise
+}
+
+/**
+ * Fire-and-forget TTS preload — warms the cache for the next exercise.
+ * Errors are silently ignored since this is a best-effort optimisation.
+ */
+export function preloadTTS(opts: TTSOptions): void {
+  const key = ttsCacheKey(opts)
+  if (ttsCache.has(key)) return // already cached
+  tts(opts).catch(() => {})
 }
 
 // ── Speech-to-Text ────────────────────────────────────────────────────────────

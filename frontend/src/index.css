@@ -42,6 +42,15 @@ body {
   line-height: 1.6;
   min-height: 100vh;
   margin: 0;
+  /* Prevent horizontal scroll from oversized decorative elements */
+  overflow-x: hidden;
+}
+
+/* ── Responsive header branding ──────────────────────────────────────────── */
+/* Hide "Indian Duolingo" text on very narrow screens (< 360px) so the header
+   doesn't overflow when streak + XP badges are also present */
+@media (max-width: 359px) {
+  .brand-text { display: none; }
 }
 
 /* ── Script fonts for Indian languages ───────────────────────────────────── */

@@ -42,13 +42,14 @@ export default function Header({ showBack = false, onBack }: HeaderProps) {
         ) : (
           <>
             <span className="text-2xl">🇮🇳</span>
-            <span style={{ color: '#1F3A5F' }}>Indian Duolingo</span>
+            {/* Hidden on very small screens to prevent header overflow */}
+            <span className="brand-text" style={{ color: '#1F3A5F' }}>Indian Duolingo</span>
           </>
         )}
       </button>
 
       {/* Right: streak + XP */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         {/* Streak — orange is appropriate here (key motivator) */}
         {progress.currentStreak > 0 && (
           <span

@@ -80,6 +80,8 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
 
     const ttsOpts = { language_code: langCfg.languageCode, speaker: langCfg.ttsDefaultSpeaker }
 
+    const requestStart = Date.now()
+
     Promise.all([
       tts({ text: exercise.targetText, ...ttsOpts, pace: 1.0 }),
       tts({ text: exercise.targetText, ...ttsOpts, pace: 0.7 }),
@@ -91,7 +93,15 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
         setLoadingTTS(false)
         return playWithFeedback(normal)
       })
-      .catch((e) => { if (!cancelled) { setError(e.message); setLoadingTTS(false) } })
+      .catch((e) => {
+        if (cancelled) return
+        // Wait out the 1-second buffer before surfacing the error — prevents
+        // premature error states during normal network startup latency.
+        const remaining = Math.max(0, 1000 - (Date.now() - requestStart))
+        const show = () => { if (!cancelled) { setError(e.message); setLoadingTTS(false) } }
+        if (remaining > 0) setTimeout(show, remaining)
+        else show()
+      })
 
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -150,10 +160,10 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
       : '0 6px 20px rgba(0,0,0,0.07)'
 
   return (
-    <div className="flex flex-col items-center px-4 py-6 max-w-md mx-auto w-full" style={{ gap: 16 }}>
+    <div className="flex flex-col items-center px-3 sm:px-4 py-5 sm:py-6 max-w-md mx-auto w-full" style={{ gap: 14 }}>
 
       {/* Instruction */}
-      <p className="font-semibold" style={{ fontSize: 17, color: '#6B7280' }}>
+      <p className="font-semibold text-sm sm:text-base" style={{ color: '#6B7280' }}>
         tap the card to hear it, then repeat
       </p>
 
@@ -166,7 +176,7 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
           background: cardBg,
           border: cardBorder,
           boxShadow: cardShadow,
-          padding: '20px 24px 20px',
+          padding: 'clamp(14px, 4vw, 20px) clamp(14px, 4vw, 24px)',
           cursor: loadingTTS ? 'default' : 'pointer',
           transition: 'border 0.25s ease, box-shadow 0.3s ease, background 0.25s ease',
         }}
@@ -174,7 +184,7 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
         {/* Top row: result label (when done) OR waveform/speaker icon */}
         <div className="flex items-center justify-between mb-2" style={{ height: 28 }}>
           {done && fb ? (
-            <span className="font-bold" style={{ fontSize: 16, color: fb.ok ? '#4A7459' : '#E07A5F' }}>
+            <span className="font-bold text-sm sm:text-base" style={{ color: fb.ok ? '#4A7459' : '#E07A5F' }}>
               {fb.label}
             </span>
           ) : (
@@ -192,17 +202,17 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
 
         {/* Script text */}
         <p className={`font-bold mb-2 ${langCfg.scriptClass}`}
-          style={{ fontSize: 44, color: '#1F3A5F', lineHeight: 1.2 }}>
+          style={{ fontSize: 'clamp(28px, 9vw, 44px)', color: '#1F3A5F', lineHeight: 1.2 }}>
           {exercise.targetText}
         </p>
 
         {/* Romanized */}
-        <p className="font-medium mb-1" style={{ fontSize: 18, color: '#E07A5F', fontStyle: 'italic' }}>
+        <p className="font-medium mb-1" style={{ fontSize: 'clamp(14px, 4vw, 18px)', color: '#E07A5F', fontStyle: 'italic' }}>
           {exercise.romanized}
         </p>
 
         {/* English */}
-        <p style={{ fontSize: 13, color: '#9CA3AF' }}>{exercise.englishText}</p>
+        <p style={{ fontSize: 12, color: '#9CA3AF' }}>{exercise.englishText}</p>
 
         {/* Result details — shown inside card after scoring */}
         {done && fb && (
@@ -264,7 +274,7 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
             disabled={processing || loadingTTS}
             className="flex flex-col items-center justify-center rounded-full text-white select-none"
             style={{
-              width: 88, height: 88, fontSize: 30, border: 'none',
+              width: 80, height: 80, fontSize: 28, border: 'none',
               background: recording
                 ? 'linear-gradient(135deg,#E07A5F,#C04A24)'
                 : 'linear-gradient(135deg,#FF7A00,#FFC857)',
@@ -278,7 +288,7 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
           >
             {processing ? '⏳' : recording ? '⏹' : '🎤'}
           </button>
-          <p className="text-xs font-medium" style={{ color: '#9CA3AF', marginTop: -8 }}>
+          <p className="text-xs font-medium" style={{ color: '#9CA3AF', marginTop: -6 }}>
             {processing ? 'analysing…' : recording ? 'release to stop' : 'hold to record'}
           </p>
         </div>

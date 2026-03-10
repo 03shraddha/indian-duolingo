@@ -9,6 +9,7 @@ import { getLessonById } from '../data/lessons'
 import { useProgress } from '../hooks/useProgress'
 import { useLanguage } from '../hooks/useLanguage'
 import { LANGUAGE_CONFIG } from '../types'
+import { preloadTTS } from '../api/sarvam'
 import type { Exercise as ExerciseType, Language } from '../types'
 
 export default function Exercise() {
@@ -31,6 +32,20 @@ export default function Exercise() {
   const [showExitModal, setShowExitModal] = useState(false)
 
   const exercise: ExerciseType | undefined = lesson?.exercises[currentIdx]
+
+  // Preload next exercise's audio while the user works on the current one
+  useEffect(() => {
+    if (!lesson) return
+    const next = lesson.exercises[currentIdx + 1]
+    if (!next) return
+    const opts = { language_code: langCfg.languageCode, speaker: langCfg.ttsDefaultSpeaker }
+    if (next.type === 'listen-identify') {
+      preloadTTS({ text: next.targetText, ...opts })
+    } else if (next.type === 'speak-repeat') {
+      preloadTTS({ text: next.targetText, ...opts, pace: 1.0 })
+      preloadTTS({ text: next.targetText, ...opts, pace: 0.7 })
+    }
+  }, [currentIdx, lesson, langCfg])
 
   function handleContinue() {
     if (!lesson) return
@@ -63,23 +78,23 @@ export default function Exercise() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-6 text-center"
         style={{ background: '#F8F5F0', position: 'relative' }}>
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 5, background: 'linear-gradient(90deg,#FFC857,#FF7A00,#FFC857)' }} />
-        <span className="text-8xl bounce-in">🎉</span>
-        <h2 className="text-4xl font-extrabold" style={{ color: '#1F3A5F' }}>Lesson Complete!</h2>
-        <p className={`text-2xl font-bold ${langCfg.scriptClass}`} style={{ color: '#FF7A00' }}>
+        <span className="text-6xl sm:text-8xl bounce-in">🎉</span>
+        <h2 className="text-3xl sm:text-4xl font-extrabold" style={{ color: '#1F3A5F' }}>Lesson Complete!</h2>
+        <p className={`text-xl sm:text-2xl font-bold ${langCfg.scriptClass}`} style={{ color: '#FF7A00' }}>
           {langCfg.wellDoneText}
         </p>
-        <div className="px-6 py-3 rounded-2xl font-bold text-xl shadow-sm"
+        <div className="px-5 py-3 rounded-2xl font-bold text-lg sm:text-xl shadow-sm"
           style={{ background: '#EFF4EF', color: '#4A7459', border: '1.5px solid #C4D6C4' }}>
           +10 XP earned ⭐
         </div>
-        <div className="flex gap-3 mt-4">
+        <div className="flex gap-2 sm:gap-3 mt-4 w-full max-w-xs">
           <button onClick={() => navigate('/learn')}
-            className="px-6 py-4 rounded-2xl font-bold text-white shadow active:scale-95 transition-transform"
+            className="flex-1 px-4 py-3 sm:py-4 rounded-2xl font-bold text-white shadow active:scale-95 transition-transform text-sm sm:text-base"
             style={{ background: '#1F3A5F', border: 'none', cursor: 'pointer' }}>
             ← All Lessons
           </button>
           <button onClick={() => { setCurrentIdx(0); setFinished(false) }}
-            className="px-6 py-4 rounded-2xl font-bold shadow active:scale-95 transition-transform"
+            className="flex-1 px-4 py-3 sm:py-4 rounded-2xl font-bold shadow active:scale-95 transition-transform text-sm sm:text-base"
             style={{ background: '#FFFFFF', color: '#1F3A5F', border: '1.5px solid #EDE8E0', cursor: 'pointer' }}>
             Practice Again 🔄
           </button>

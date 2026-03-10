@@ -84,7 +84,29 @@ export default function Home() {
       {/* Thin decorative top accent strip */}
       <TopAccent />
 
-      {/* Subtle background mandala — 5% opacity */}
+      {/* Background: script letterform motif + faint mandala */}
+      <div
+        className="fixed inset-0 pointer-events-none select-none overflow-hidden"
+        style={{ zIndex: 0 }}
+        aria-hidden="true"
+      >
+        {/* Oversized script character — decorative letterform from active language */}
+        <span
+          className={`absolute font-extrabold ${cfg.scriptClass}`}
+          style={{
+            fontSize: 'clamp(180px, 55vw, 340px)',
+            opacity: 0.04,
+            color: '#1F3A5F',
+            top: '8%',
+            right: '-8%',
+            lineHeight: 1,
+            transform: 'rotate(12deg)',
+            userSelect: 'none',
+          }}
+        >
+          {cfg.greeting.split(' ')[0]}
+        </span>
+      </div>
       <div
         className="fixed inset-0 pointer-events-none select-none flex items-center justify-center"
         style={{ zIndex: 0 }}
@@ -117,8 +139,8 @@ export default function Home() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-5 py-8 relative z-10">
-        <div className="w-full" style={{ maxWidth: 380 }}>
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 relative z-10">
+        <div className="w-full max-w-xs sm:max-w-[380px]">
 
           {/* Greeting — indigo, not orange */}
           <p className="text-base font-semibold text-center mb-5"
@@ -135,14 +157,14 @@ export default function Home() {
           </div>
 
           {/* Headline */}
-          <h1 className="text-center font-bold mb-2"
-            style={{ fontSize: 40, color: '#1F2937', lineHeight: 1.1, letterSpacing: '-0.5px' }}>
+          <h1 className="text-center font-bold mb-2 text-3xl sm:text-[40px]"
+            style={{ color: '#1F2937', lineHeight: 1.1, letterSpacing: '-0.5px' }}>
             Indian Duolingo
           </h1>
 
           {/* Language greeting in native script — indigo, not orange */}
-          <p className={`font-semibold text-center mb-1 ${cfg.scriptClass}`}
-            style={{ fontSize: 22, color: '#1F3A5F' }}>
+          <p className={`font-semibold text-center mb-1 text-xl sm:text-[22px] ${cfg.scriptClass}`}
+            style={{ color: '#1F3A5F' }}>
             {cfg.greeting}
           </p>
           <p className="text-center mb-5" style={{ fontSize: 13, color: '#9CA3AF' }}>

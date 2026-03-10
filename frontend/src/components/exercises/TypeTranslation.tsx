@@ -33,18 +33,18 @@ export default function TypeTranslation({ exercise, langCfg, onResult }: Props) 
   }
 
   return (
-    <div className="flex flex-col items-center gap-5 px-4 py-6 max-w-md mx-auto w-full">
+    <div className="flex flex-col items-center gap-4 sm:gap-5 px-3 sm:px-4 py-5 sm:py-6 max-w-md mx-auto w-full">
       {/* Instruction */}
-      <p className="font-semibold" style={{ fontSize: 17, color: '#6B7280' }}>
+      <p className="font-semibold text-sm sm:text-base" style={{ color: '#6B7280' }}>
         ✍️ type the translation
       </p>
 
       {/* English phrase — indigo card instead of heavy gradient */}
       <div
-        className="w-full rounded-3xl p-6 text-center shadow-sm"
+        className="w-full rounded-3xl p-4 sm:p-6 text-center shadow-sm"
         style={{ background: '#1F3A5F' }}
       >
-        <p className="text-3xl font-extrabold text-white">{exercise.englishText}</p>
+        <p className="text-2xl sm:text-3xl font-extrabold text-white">{exercise.englishText}</p>
       </div>
 
       {/* Romanized hint — muted terracotta */}
@@ -61,7 +61,7 @@ export default function TypeTranslation({ exercise, langCfg, onResult }: Props) 
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
           placeholder="Type the phrase..."
           disabled={submitted}
-          className={`w-full text-2xl text-center py-4 px-4 rounded-2xl border-2 outline-none transition-colors ${langCfg.scriptClass}`}
+          className={`w-full text-xl sm:text-2xl text-center py-3 sm:py-4 px-4 rounded-2xl border-2 outline-none transition-colors ${langCfg.scriptClass}`}
           style={{
             borderColor: submitted ? (correct ? '#00A896' : '#E07A5F') : '#EDE8E0',
             background: submitted ? (correct ? '#E8F8F5' : '#FEF3EE') : 'white',

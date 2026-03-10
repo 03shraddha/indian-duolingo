@@ -95,6 +95,8 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
     setScriptLen(0)
     setRomaVisible(false)
 
+    const requestStart = Date.now()
+
     tts({ text: exercise.targetText, language_code: langCfg.languageCode, speaker: langCfg.ttsDefaultSpeaker })
       .then((b64) => {
         if (cancelled) return
@@ -102,7 +104,15 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
         setLoading(false)
         return playWithReveal(b64)
       })
-      .catch((e) => { if (!cancelled) { setError(e.message); setLoading(false) } })
+      .catch((e) => {
+        if (cancelled) return
+        // Don't flash an error for transient failures in the first second —
+        // wait out the remaining buffer before surfacing the message.
+        const remaining = Math.max(0, 1000 - (Date.now() - requestStart))
+        const show = () => { if (!cancelled) { setError(e.message); setLoading(false) } }
+        if (remaining > 0) setTimeout(show, remaining)
+        else show()
+      })
 
     return () => {
       cancelled = true
@@ -121,10 +131,10 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
   const scriptVisible = segments.slice(0, scriptLen).join('')
 
   return (
-    <div className="flex flex-col items-center gap-6 px-4 py-6 max-w-md mx-auto w-full">
+    <div className="flex flex-col items-center gap-4 sm:gap-6 px-3 sm:px-4 py-5 sm:py-6 max-w-md mx-auto w-full">
 
       {/* Instruction — typewriter, centered */}
-      <p className="font-semibold text-center" style={{ fontSize: 17, color: '#6B7280', minHeight: 26 }}>
+      <p className="font-semibold text-center text-sm sm:text-base" style={{ color: '#6B7280', minHeight: 22 }}>
         {INSTR.slice(0, instrLen)}
       </p>
 
@@ -139,7 +149,7 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
           boxShadow: playing
             ? '0 0 0 4px rgba(255,200,87,0.18), 0 6px 20px rgba(0,0,0,0.07)'
             : '0 6px 20px rgba(0,0,0,0.07)',
-          padding: '24px 24px 20px',
+          padding: 'clamp(14px, 4vw, 24px) clamp(14px, 4vw, 24px) clamp(12px, 3.5vw, 20px)',
           cursor: loading ? 'default' : 'pointer',
           transition: 'border 0.2s ease, box-shadow 0.3s ease',
         }}
@@ -155,17 +165,17 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
         {/* Script text — reveals grapheme by grapheme after audio plays */}
         <p
           className={`font-bold mb-2 ${langCfg.scriptClass}`}
-          style={{ fontSize: 44, color: '#1F3A5F', lineHeight: 1.2, minHeight: 56 }}
+          style={{ fontSize: 'clamp(28px, 9vw, 44px)', color: '#1F3A5F', lineHeight: 1.2, minHeight: 'clamp(36px, 10vw, 56px)' }}
         >
           {scriptVisible || <span style={{ opacity: 0.12 }}>•</span>}
         </p>
 
         {/* Romanization — fades in after script completes */}
         <p style={{
-          fontSize: 16, color: '#E07A5F', fontStyle: 'italic',
+          fontSize: 'clamp(13px, 3.5vw, 16px)', color: '#E07A5F', fontStyle: 'italic',
           opacity: romaVisible ? 1 : 0,
           transition: 'opacity 0.3s ease',
-          minHeight: 24,
+          minHeight: 20,
         }}>
           [{exercise.romanized}]
         </p>
@@ -180,7 +190,7 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
       )}
 
       {/* Answer options — warm idle, indigo for correct, terracotta for wrong */}
-      <div className="grid grid-cols-2 gap-3 w-full">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full">
         {options.map((opt) => {
           const isCorrect = opt === exercise.englishText
           const isSelected = opt === selected
@@ -204,7 +214,7 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
               key={opt}
               onClick={() => handleSelect(opt)}
               disabled={!!selected}
-              className="py-4 px-3 rounded-2xl font-semibold text-base shadow-sm border-2 transition-all active:scale-95"
+              className="py-3 sm:py-4 px-2 sm:px-3 rounded-2xl font-semibold text-sm sm:text-base shadow-sm border-2 transition-all active:scale-95"
               style={{ background: bg, color: textColor, borderColor, cursor: selected ? 'default' : 'pointer' }}
             >
               {opt}

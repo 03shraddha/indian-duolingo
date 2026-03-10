@@ -89,6 +89,24 @@ export default function LessonPath() {
 
   return (
     <div className="min-h-screen" style={{ background: '#F8F5F0', position: 'relative' }}>
+      {/* Background: script letterform motif */}
+      <div className="fixed inset-0 pointer-events-none select-none overflow-hidden" style={{ zIndex: 0 }} aria-hidden="true">
+        <span
+          className={`absolute font-extrabold ${cfg.scriptClass}`}
+          style={{
+            fontSize: 'clamp(140px, 45vw, 280px)',
+            opacity: 0.035,
+            color: '#1F3A5F',
+            bottom: '15%',
+            left: '-6%',
+            lineHeight: 1,
+            transform: 'rotate(-8deg)',
+            userSelect: 'none',
+          }}
+        >
+          {cfg.nativeName}
+        </span>
+      </div>
       {/* Faint mandala backdrop — same as Home, 4% opacity */}
       <div className="fixed inset-0 pointer-events-none select-none flex items-center justify-center"
         style={{ zIndex: 0 }} aria-hidden="true">
@@ -115,7 +133,7 @@ export default function LessonPath() {
       </div>
       <div style={{ position: 'relative', zIndex: 1 }}>
       <Header />
-      <main className="max-w-lg mx-auto px-4 pt-6 pb-28">
+      <main className="max-w-lg mx-auto px-3 sm:px-4 pt-6 pb-28">
         <div className="flex items-center justify-between mb-6">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#9CA3AF' }}>Learning</p>
