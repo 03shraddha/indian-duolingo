@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Header from '../components/Header'
 import ProgressBar from '../components/ProgressBar'
@@ -27,16 +27,26 @@ export default function Exercise() {
 
   const lesson = lessonId ? getLessonById(lessonId, activeLang) : null
 
+  // Sort exercises so listen-identify comes first, speak-repeat last.
+  // This keeps fast interactions at the front and voice recording at the end,
+  // reducing perceived latency while the user warms up with the content.
+  const TYPE_ORDER: Record<string, number> = { 'listen-identify': 0, 'type-translation': 1, 'speak-repeat': 2 }
+  const exercises = useMemo(
+    () => lesson ? [...lesson.exercises].sort((a, b) => (TYPE_ORDER[a.type] ?? 3) - (TYPE_ORDER[b.type] ?? 3)) : [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [lesson?.id],
+  )
+
   const [currentIdx, setCurrentIdx] = useState(0)
   const [finished, setFinished] = useState(false)
   const [showExitModal, setShowExitModal] = useState(false)
 
-  const exercise: ExerciseType | undefined = lesson?.exercises[currentIdx]
+  const exercise: ExerciseType | undefined = exercises[currentIdx]
 
   // Preload next exercise's audio while the user works on the current one
   useEffect(() => {
     if (!lesson) return
-    const next = lesson.exercises[currentIdx + 1]
+    const next = exercises[currentIdx + 1]
     if (!next) return
     const opts = { language_code: langCfg.languageCode, speaker: langCfg.ttsDefaultSpeaker }
     if (next.type === 'listen-identify') {
@@ -47,11 +57,11 @@ export default function Exercise() {
     }
   }, [currentIdx, lesson, langCfg])
 
-  function handleContinue() {
+  function handleContinue(skip = false) {
     if (!lesson) return
     const nextIdx = currentIdx + 1
-    if (nextIdx >= lesson.exercises.length) {
-      completeLesson(lesson.id)
+    if (nextIdx >= exercises.length) {
+      if (!skip) completeLesson(lesson.id)
       setFinished(true)
     } else {
       setCurrentIdx(nextIdx)
@@ -146,20 +156,30 @@ export default function Exercise() {
           </div>
         </div>
       )}
-      <ProgressBar current={currentIdx} total={lesson.exercises.length} />
+      <ProgressBar current={currentIdx} total={exercises.length} />
       <div className="px-4 pt-2 pb-1 flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#9CA3AF' }}>
           {lesson.title}
         </p>
-        {currentIdx > 0 && (
+        <div className="flex items-center gap-3">
+          {currentIdx > 0 && (
+            <button
+              onClick={() => setCurrentIdx(currentIdx - 1)}
+              className="text-xs font-semibold"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}
+            >
+              ← prev
+            </button>
+          )}
+          {/* Skip — lets users move past a stuck/buggy exercise without losing flow */}
           <button
-            onClick={() => setCurrentIdx(currentIdx - 1)}
+            onClick={() => handleContinue(true)}
             className="text-xs font-semibold"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C0BAB2' }}
           >
-            ← prev
+            skip →
           </button>
-        )}
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto">
         {exercise && exercise.type === 'listen-identify' && (

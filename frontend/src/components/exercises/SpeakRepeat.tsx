@@ -98,8 +98,6 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
 
     const ttsOpts = { language_code: langCfg.languageCode, speaker: langCfg.ttsDefaultSpeaker }
 
-    const requestStart = Date.now()
-
     Promise.all([
       tts({ text: exercise.targetText, ...ttsOpts, pace: 1.0 }),
       tts({ text: exercise.targetText, ...ttsOpts, pace: 0.7 }),
@@ -111,14 +109,26 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
         setLoadingTTS(false)
         return playWithFeedback(normal)
       })
-      .catch((e) => {
+      .catch(() => {
         if (cancelled) return
-        // Wait out the 1-second buffer before surfacing the error — prevents
-        // premature error states during normal network startup latency.
-        const remaining = Math.max(0, 1000 - (Date.now() - requestStart))
-        const show = () => { if (!cancelled) { setError(e.message); setLoadingTTS(false) } }
-        if (remaining > 0) setTimeout(show, remaining)
-        else show()
+        // First attempt failed (e.g. backend cold-start). Retry silently after
+        // 1.5 s — keep showing the loading spinner, no error flash.
+        setTimeout(async () => {
+          if (cancelled) return
+          try {
+            const [normal, slow] = await Promise.all([
+              tts({ text: exercise.targetText, ...ttsOpts, pace: 1.0 }),
+              tts({ text: exercise.targetText, ...ttsOpts, pace: 0.7 }),
+            ])
+            if (cancelled) return
+            setAudioBase64(normal)
+            setAudioSlow(slow)
+            setLoadingTTS(false)
+            playWithFeedback(normal)
+          } catch (retryErr) {
+            if (!cancelled) { setError((retryErr as Error).message); setLoadingTTS(false) }
+          }
+        }, 1500)
       })
 
     return () => { cancelled = true }
@@ -135,7 +145,12 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
     if (recording || processing) return
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
+      // Prefer opus codec — smaller files = faster STT upload on mobile.
+      // audioBitsPerSecond 24000 is ample for speech recognition (default is ~128kbps).
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : 'audio/webm'
+      const recorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 24000 })
       chunksRef.current = []
       recorderRef.current = recorder
       recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }

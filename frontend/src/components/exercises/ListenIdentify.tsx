@@ -128,23 +128,31 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
     setScriptLen(0)
     setRomaVisible(false)
 
-    const requestStart = Date.now()
+    const opts = { text: exercise.targetText, language_code: langCfg.languageCode, speaker: langCfg.ttsDefaultSpeaker }
 
-    tts({ text: exercise.targetText, language_code: langCfg.languageCode, speaker: langCfg.ttsDefaultSpeaker })
+    tts(opts)
       .then((b64) => {
         if (cancelled) return
         setAudioBase64(b64)
         setLoading(false)
         return playWithReveal(b64)
       })
-      .catch((e) => {
+      .catch(() => {
         if (cancelled) return
-        // Don't flash an error for transient failures in the first second —
-        // wait out the remaining buffer before surfacing the message.
-        const remaining = Math.max(0, 1000 - (Date.now() - requestStart))
-        const show = () => { if (!cancelled) { setError(e.message); setLoading(false) } }
-        if (remaining > 0) setTimeout(show, remaining)
-        else show()
+        // First attempt failed (e.g. backend cold-start). Retry silently after
+        // 1.5 s — keep showing the loading spinner, no error flash.
+        setTimeout(async () => {
+          if (cancelled) return
+          try {
+            const b64 = await tts(opts)
+            if (cancelled) return
+            setAudioBase64(b64)
+            setLoading(false)
+            playWithReveal(b64)
+          } catch (retryErr) {
+            if (!cancelled) { setError((retryErr as Error).message); setLoading(false) }
+          }
+        }, 1500)
       })
 
     return () => {
