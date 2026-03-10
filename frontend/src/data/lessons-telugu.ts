@@ -31,11 +31,12 @@ export const units: Unit[] = [
           {
             // Natural response to the greeting + returns the question
             id: 'te-e3',
-            type: 'listen-identify',
+            type: 'select-phrase',
             englishText: "I'm fine, and you?",
             targetText: 'నేను బాగున్నాను, మీరు?',
             romanized: 'Nenu baagunnanu, meeru?',
-            options: ["I'm fine, and you?", "I'm very tired", "Not so great", "Could be better"],
+            options: ['నేను బాగున్నాను, మీరు?', 'నమస్కారం, ఎలా ఉన్నారు?', 'చాలా ధన్యవాదాలు', 'నా పేరు...'],
+            optionsRomanized: ['Nenu baagunnanu, meeru?', 'Namaskaram, ela unnaru?', 'Chaala dhanyavaadaalu', 'Naa peru...'],
           },
           {
             // Asking someone's name — natural follow-up after greeting
@@ -80,11 +81,12 @@ export const units: Unit[] = [
           {
             // "Sure, go ahead" — more conversational than bare "OK"
             id: 'te-e8',
-            type: 'listen-identify',
+            type: 'select-phrase',
             englishText: 'Sure, go ahead',
             targetText: 'సరే, చెప్పండి',
             romanized: 'Sare, cheppandi',
-            options: ['Sure, go ahead', 'Stop right there', 'I disagree', 'Not right now'],
+            options: ['సరే, చెప్పండి', 'అవును, సరే', 'వద్దు, ధన్యవాదాలు', 'పర్వాలేదు, వదిలేయండి'],
+            optionsRomanized: ['Sare, cheppandi', 'Avunu, sare', 'Vaddu, dhanyavaadaalu', 'Parvaaledu, vadileeyandi'],
           },
           {
             // Sorry combined with "I don't know" — the real phrase you need
@@ -127,11 +129,12 @@ export const units: Unit[] = [
           },
           {
             id: 'te-e13',
-            type: 'listen-identify',
+            type: 'select-phrase',
             englishText: 'How much does this cost?',
             targetText: 'ఇది ఎంత?',
             romanized: 'Idi enta?',
-            options: ['How much does this cost?', 'Is this for sale?', 'I want to buy this', 'This is too expensive'],
+            options: ['ఇది ఎంత?', 'నాకు అర్థం కాలేదు', 'నాకు తెలుగు రాదు', 'నాకు సహాయం కావాలి'],
+            optionsRomanized: ['Idi enta?', 'Naaku artham kaaledu', 'Naaku Telugu raadu', 'Naaku sahaayam kaavaali'],
           },
           {
             id: 'te-e14',

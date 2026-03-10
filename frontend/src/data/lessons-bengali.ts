@@ -31,11 +31,12 @@ export const bengaliUnits: Unit[] = [
           {
             // Natural response to the greeting + returns the question
             id: 'bn-e3',
-            type: 'listen-identify',
+            type: 'select-phrase',
             englishText: "I'm fine, and you?",
             targetText: 'ভালো আছি, আপনি?',
             romanized: 'Bhalo achi, aapni?',
-            options: ["I'm fine, and you?", "I'm very tired", "Not so great", "Could be better"],
+            options: ['ভালো আছি, আপনি?', 'নমস্কার, কেমন আছেন?', 'অনেক ধন্যবাদ', 'আমার নাম...'],
+            optionsRomanized: ['Bhalo achi, aapni?', 'Namaskar, kemon achen?', 'Onek dhanyabad', 'Aamar naam...'],
           },
           {
             // Asking someone's name — natural follow-up after greeting
@@ -80,11 +81,12 @@ export const bengaliUnits: Unit[] = [
           {
             // "Sure, go ahead" — more conversational than bare "OK"
             id: 'bn-e8',
-            type: 'listen-identify',
+            type: 'select-phrase',
             englishText: 'Sure, go ahead',
             targetText: 'ঠিক আছে, বলুন',
             romanized: 'Thik ache, bolun',
-            options: ['Sure, go ahead', 'Stop right there', 'I disagree', 'Not right now'],
+            options: ['ঠিক আছে, বলুন', 'হ্যাঁ, ঠিক আছে', 'না, ধন্যবাদ', 'কোনো সমস্যা নেই'],
+            optionsRomanized: ['Thik ache, bolun', 'Hyan, thik ache', 'Na, dhanyabad', 'Kono shomoshya nei'],
           },
           {
             // Sorry combined with "I don't know" — the real phrase you need
@@ -127,11 +129,12 @@ export const bengaliUnits: Unit[] = [
           },
           {
             id: 'bn-e13',
-            type: 'listen-identify',
+            type: 'select-phrase',
             englishText: 'How much does this cost?',
             targetText: 'এটার দাম কত?',
             romanized: 'Etar daam koto?',
-            options: ['How much does this cost?', 'Is this for sale?', 'I want to buy this', 'This is too expensive'],
+            options: ['এটার দাম কত?', 'বুঝতে পারছি না', 'আমি বাংলা জানি না', 'আমার সাহায্য দরকার'],
+            optionsRomanized: ['Etar daam koto?', 'Bujhte parchi na', 'Aami Bangla jaani na', 'Aamar shahaajyo dorkar'],
           },
           {
             id: 'bn-e14',

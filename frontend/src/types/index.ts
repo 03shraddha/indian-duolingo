@@ -6,7 +6,8 @@ export interface Exercise {
   englishText: string
   targetText: string      // phrase in the target language script (was hindiText)
   romanized: string       // pronunciation hint in Roman letters (was hindiRomanized)
-  options?: string[]      // listen-identify: 4 English choices (includes correct one)
+  options?: string[]           // listen-identify: 4 English choices; select-phrase: 4 native script choices
+  optionsRomanized?: string[]  // select-phrase: Roman transliteration for each option (parallel to options[])
 }
 
 export interface Lesson {

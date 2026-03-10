@@ -31,11 +31,12 @@ export const units: Unit[] = [
           {
             // Natural response to the greeting + returns the question
             id: 'ta-e3',
-            type: 'listen-identify',
+            type: 'select-phrase',
             englishText: "I'm well, and you?",
             targetText: 'நல்லா இருக்கேன், நீங்க?',
             romanized: 'Nalla irukken, ninga?',
-            options: ["I'm well, and you?", "I'm very tired", "Not so great", "Could be better"],
+            options: ['நல்லா இருக்கேன், நீங்க?', 'வணக்கம், எப்படி இருக்கீங்க?', 'ரொம்ப நன்றி', 'என் பெயர்...'],
+            optionsRomanized: ['Nalla irukken, ninga?', 'Vanakkam, eppadi irukkinga?', 'Romba nandri', 'En peyar...'],
           },
           {
             // Asking someone's name — natural follow-up after greeting
@@ -80,11 +81,12 @@ export const units: Unit[] = [
           {
             // "Sure, go ahead" — more conversational than bare "OK"
             id: 'ta-e8',
-            type: 'listen-identify',
+            type: 'select-phrase',
             englishText: 'Sure, go ahead',
             targetText: 'சரி, சொல்லு',
             romanized: 'Sari, sollu',
-            options: ['Sure, go ahead', 'Stop right there', 'I disagree', 'Not right now'],
+            options: ['சரி, சொல்லு', 'ஆமாம், சரி', 'வேண்டாம், நன்றி', 'பரவாயில்லை, விடுங்க'],
+            optionsRomanized: ['Sari, sollu', 'Aamam, sari', 'Vendaam, nandri', 'Paravaayillai, vidunga'],
           },
           {
             // Sorry combined with "I don't know" — the real phrase you need
@@ -127,11 +129,12 @@ export const units: Unit[] = [
           },
           {
             id: 'ta-e13',
-            type: 'listen-identify',
+            type: 'select-phrase',
             englishText: 'How much does this cost?',
             targetText: 'இதன் விலை என்ன?',
             romanized: 'Ithan vilai enna?',
-            options: ['How much does this cost?', 'Is this for sale?', 'I want to buy this', 'This is too expensive'],
+            options: ['இதன் விலை என்ன?', 'புரியல, மீண்டும் சொல்லுங்க', 'எனக்கு தமிழ் தெரியாது', 'எனக்கு உதவி வேணும்'],
+            optionsRomanized: ['Ithan vilai enna?', 'Puriyala, meendum sollunga', 'Enakku Tamil theriyaadhu', 'Enakku udhavi venum'],
           },
           {
             id: 'ta-e14',

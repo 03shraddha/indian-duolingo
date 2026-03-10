@@ -229,14 +229,14 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
       <button
         onClick={() => audioBase64 && playWithFeedback(audioBase64)}
         disabled={loadingTTS}
-        className="exercise-card w-full rounded-3xl text-center disabled:opacity-60"
+        className={`exercise-card w-full rounded-3xl text-center ${loadingTTS ? 'audio-loading-card' : ''}`}
         style={{
           background: cardBg,
-          border: cardBorder,
-          boxShadow: cardShadow,
+          border: loadingTTS ? '1.5px solid #EDE8E0' : cardBorder,
+          boxShadow: loadingTTS ? undefined : cardShadow,
           padding: 'clamp(14px, 4vw, 20px) clamp(14px, 4vw, 24px)',
           cursor: loadingTTS ? 'default' : 'pointer',
-          transition: 'border 0.25s ease, box-shadow 0.3s ease, background 0.25s ease',
+          transition: loadingTTS ? 'none' : 'border 0.25s ease, box-shadow 0.3s ease, background 0.25s ease',
         }}
       >
         {/* Top row: result label (when done) OR waveform/speaker icon */}
@@ -252,7 +252,7 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
             {playing
               ? <WaveformBars color={done && fb ? (fb.ok ? '#7A9E82' : '#E07A5F') : '#FFC857'} />
               : <span style={{ color: done && fb ? (fb.ok ? '#7A9E82' : '#E07A5F') : '#FFC857', fontSize: 18 }}>
-                  {loadingTTS ? '⏳' : '🔊'}
+                  🔊
                 </span>
             }
           </span>
@@ -296,22 +296,37 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
         )}
       </button>
 
-      {/* Speed + mic controls — hidden after result */}
-      {!done && (
+      {/* Audio loading indicator — replaces controls while TTS prepares */}
+      {!done && loadingTTS && (
+        <div className="flex flex-col items-center" style={{ gap: 10, minHeight: 120, justifyContent: 'center' }}>
+          <div
+            className="audio-spinner"
+            style={{
+              width: 44, height: 44,
+              borderRadius: '50%',
+              border: '4px solid #EDE8E0',
+              borderTopColor: '#FF7A00',
+            }}
+          />
+          <p className="text-sm font-semibold" style={{ color: '#9CA3AF' }}>Preparing audio…</p>
+        </div>
+      )}
+
+      {/* Speed + mic controls — hidden after result or while loading */}
+      {!done && !loadingTTS && (
         <div className="flex flex-col items-center" style={{ gap: 14 }}>
 
           {/* Segmented pill: ▶▶ Normal | ▶ Slow */}
           <div
             className="flex rounded-full overflow-hidden"
-            style={{ border: '1.5px solid #EDE8E0', background: '#F8F5F0', opacity: loadingTTS ? 0.5 : 1 }}
+            style={{ border: '1.5px solid #EDE8E0', background: '#F8F5F0' }}
           >
             {(['normal', 'slow'] as const).map((speed) => {
               const active = activeSpeed === speed
               return (
                 <button
                   key={speed}
-                  onClick={() => !loadingTTS && handleSpeedToggle(speed)}
-                  disabled={loadingTTS}
+                  onClick={() => handleSpeedToggle(speed)}
                   className="flex items-center gap-1.5 px-5 py-2 text-sm font-semibold transition-all"
                   style={{
                     background: active ? '#1F3A5F' : 'transparent',
@@ -336,7 +351,7 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
             onMouseUp={stopRecording}
             onTouchStart={(e) => { e.preventDefault(); startRecording() }}
             onTouchEnd={stopRecording}
-            disabled={processing || loadingTTS}
+            disabled={processing}
             className="flex flex-col items-center justify-center rounded-full text-white select-none"
             style={{
               width: 80, height: 80, fontSize: 28, border: 'none',

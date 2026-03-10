@@ -17,6 +17,7 @@ export default function SelectPhrase({ exercise, langCfg, onResult }: Props) {
   }
 
   const options = exercise.options ?? [exercise.targetText]
+  const optionsRomanized = exercise.optionsRomanized ?? []
   const isCorrect = selected === exercise.targetText
 
   return (
@@ -47,20 +48,22 @@ export default function SelectPhrase({ exercise, langCfg, onResult }: Props) {
 
       {/* Option grid — 2 columns, target language script */}
       <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full">
-        {options.map((opt) => {
+        {options.map((opt, i) => {
           const isOptCorrect = opt === exercise.targetText
           const isSelected = opt === selected
+          const romanized = optionsRomanized[i]
 
           let bg = '#FBF9F6'
           let borderColor = '#E8E2DA'
           let textColor = '#1F3A5F'
+          let romanizedColor = '#9CA3AF'
           let opacity = 1
 
           if (selected) {
             if (isOptCorrect) {
-              bg = '#1F3A5F'; textColor = '#FFFFFF'; borderColor = '#1F3A5F'
+              bg = '#1F3A5F'; textColor = '#FFFFFF'; borderColor = '#1F3A5F'; romanizedColor = 'rgba(255,255,255,0.7)'
             } else if (isSelected) {
-              bg = '#E07A5F'; textColor = '#FFFFFF'; borderColor = '#E07A5F'
+              bg = '#E07A5F'; textColor = '#FFFFFF'; borderColor = '#E07A5F'; romanizedColor = 'rgba(255,255,255,0.7)'
             } else {
               opacity = 0.38
             }
@@ -71,22 +74,34 @@ export default function SelectPhrase({ exercise, langCfg, onResult }: Props) {
               key={opt}
               onClick={() => handleSelect(opt)}
               disabled={!!selected}
-              className={`py-4 sm:py-5 px-3 rounded-2xl font-bold border-2 shadow-sm transition-all active:scale-95 ${langCfg.scriptClass}`}
+              className="rounded-2xl border-2 shadow-sm transition-all active:scale-95"
               style={{
                 background: bg,
-                color: textColor,
                 borderColor,
                 opacity,
-                fontSize: 'clamp(14px, 4vw, 19px)',
-                lineHeight: 1.35,
                 cursor: selected ? 'default' : 'pointer',
-                minHeight: 72,
+                minHeight: romanized ? 82 : 72,
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
+                gap: 2,
+                padding: '10px 12px',
               }}
             >
-              {opt}
+              <span
+                className={`font-bold ${langCfg.scriptClass}`}
+                style={{ color: textColor, fontSize: 'clamp(14px, 4vw, 19px)', lineHeight: 1.35 }}
+              >
+                {opt}
+              </span>
+              {romanized && (
+                <span
+                  style={{ color: romanizedColor, fontSize: 'clamp(10px, 2.8vw, 13px)', lineHeight: 1.2, fontStyle: 'italic' }}
+                >
+                  {romanized}
+                </span>
+              )}
             </button>
           )
         })}

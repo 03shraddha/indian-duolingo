@@ -36,6 +36,7 @@ export const units: Unit[] = [
             targetText: 'अभी नहीं',
             romanized: 'Abhi nahin',
             options: ['अभी नहीं', 'हाँ ठीक है', 'चलो', 'बाद में'],
+            optionsRomanized: ['Abhi nahin', 'Haan theek hai', 'Chalo', 'Baad mein'],
           },
           {
             id: 'e4',
@@ -81,6 +82,7 @@ export const units: Unit[] = [
             targetText: 'चलो',
             romanized: 'Chalo',
             options: ['चलो', 'अभी नहीं', 'थोड़ा रुको', 'समझ गया'],
+            optionsRomanized: ['Chalo', 'Abhi nahin', 'Thoda ruko', 'Samajh gaya'],
           },
           {
             id: 'e9',
@@ -126,6 +128,7 @@ export const units: Unit[] = [
             targetText: 'मुझे भूख लगी है',
             romanized: 'Mujhe bhookh lagi hai',
             options: ['मुझे भूख लगी है', 'मुझे मदद चाहिए', 'मैं बहुत थका हूँ', 'मुझे नींद आ रही है'],
+            optionsRomanized: ['Mujhe bhookh lagi hai', 'Mujhe madad chahiye', 'Main bahut thaka hoon', 'Mujhe neend aa rahi hai'],
           },
           {
             id: 'e14',
@@ -149,6 +152,7 @@ export const units: Unit[] = [
             targetText: 'मुझे नींद आ रही है',
             romanized: 'Mujhe neend aa rahi hai',
             options: ['मुझे नींद आ रही है', 'मुझे भूख लगी है', 'मेरे पास टाइम नहीं है', 'मुझे मदद चाहिए'],
+            optionsRomanized: ['Mujhe neend aa rahi hai', 'Mujhe bhookh lagi hai', 'Mere paas time nahin hai', 'Mujhe madad chahiye'],
           },
         ],
       },
@@ -190,6 +194,7 @@ export const units: Unit[] = [
             targetText: 'तुम कब आओगे?',
             romanized: 'Tum kab aaoge?',
             options: ['तुम कब आओगे?', 'तुम कहाँ जा रहे हो?', 'खाना खाया?', 'दिन कैसा रहा?'],
+            optionsRomanized: ['Tum kab aaoge?', 'Tum kahan ja rahe ho?', 'Khaana khaya?', 'Din kaisa raha?'],
           },
           {
             id: 'e20',
@@ -235,6 +240,7 @@ export const units: Unit[] = [
             targetText: 'शाम को आऊँगा',
             romanized: 'Shaam ko aaunga',
             options: ['शाम को आऊँगा', 'अभी काम कर रहा हूँ', 'मैं घर जा रहा हूँ', 'हाँ, अभी खाया'],
+            optionsRomanized: ['Shaam ko aaunga', 'Abhi kaam kar raha hoon', 'Main ghar ja raha hoon', 'Haan, abhi khaya'],
           },
           {
             id: 'e25',
@@ -280,6 +286,7 @@ export const units: Unit[] = [
             targetText: 'छह बजे तक पहुँचूँगा',
             romanized: 'Chhah baje tak pahunchunga',
             options: ['छह बजे तक पहुँचूँगा', 'साथ चलते हैं', 'पता भेज दो', 'आज नहीं हो पाएगा'],
+            optionsRomanized: ['Chhah baje tak pahunchunga', 'Saath chalte hain', 'Pata bhej do', 'Aaj nahin ho paayega'],
           },
           {
             id: 'e30',
@@ -336,6 +343,7 @@ export const units: Unit[] = [
             targetText: 'कम चीनी',
             romanized: 'Kam cheeni',
             options: ['कम चीनी', 'दो चाय देना', 'चाय बहुत अच्छी है', 'कितने पैसे हुए?'],
+            optionsRomanized: ['Kam cheeni', 'Do chai dena', 'Chai bahut achhi hai', 'Kitne paise hue?'],
           },
           {
             id: 'e35',
@@ -381,6 +389,7 @@ export const units: Unit[] = [
             targetText: 'छुट्टे हैं क्या?',
             romanized: 'Chutte hain kya?',
             options: ['छुट्टे हैं क्या?', 'इसका दाम क्या है?', 'थोड़ा कम करो', 'अलग से पैक करो'],
+            optionsRomanized: ['Chutte hain kya?', 'Iska daam kya hai?', 'Thoda kam karo', 'Alag se pack karo'],
           },
           {
             id: 'e40',
@@ -404,6 +413,7 @@ export const units: Unit[] = [
             targetText: 'सब्ज़ी ताज़ी है',
             romanized: 'Sabzi taazi hai',
             options: ['सब्ज़ी ताज़ी है', 'छुट्टे हैं क्या?', 'फिर आऊँगा', 'अलग से पैक करो'],
+            optionsRomanized: ['Sabzi taazi hai', 'Chutte hain kya?', 'Phir aaunga', 'Alag se pack karo'],
           },
         ],
       },
@@ -434,6 +444,7 @@ export const units: Unit[] = [
             targetText: 'आज ही कर देना',
             romanized: 'Aaj hi kar dena',
             options: ['आज ही कर देना', 'काम लगभग हो गया', 'करवा देता हूँ', 'कोई दिक्कत हो तो बोलो'],
+            optionsRomanized: ['Aaj hi kar dena', 'Kaam lagbhag ho gaya', 'Karwa deta hoon', 'Koi dikkat ho toh bolo'],
           },
           {
             id: 'e46',
@@ -457,6 +468,7 @@ export const units: Unit[] = [
             targetText: 'काम हो गया',
             romanized: 'Kaam ho gaya',
             options: ['काम हो गया', 'आज ही कर देना', 'थोड़ा जल्दी करो', 'करवा देता हूँ'],
+            optionsRomanized: ['Kaam ho gaya', 'Aaj hi kar dena', 'Thoda jaldi karo', 'Karwa deta hoon'],
           },
         ],
       },

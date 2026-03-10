@@ -112,6 +112,23 @@ body {
   transition: width 0.4s ease;
 }
 
+/* Spinning ring for audio loading state */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.audio-spinner {
+  animation: spin 0.85s linear infinite;
+}
+
+/* Pulsing border on the word card while TTS is preparing */
+@keyframes borderPulse {
+  0%, 100% { border-color: #EDE8E0; box-shadow: 0 6px 20px rgba(0,0,0,0.07); }
+  50%       { border-color: #FF7A00; box-shadow: 0 0 0 4px rgba(255,122,0,0.12), 0 6px 20px rgba(0,0,0,0.07); }
+}
+.audio-loading-card {
+  animation: borderPulse 1.4s ease-in-out infinite;
+}
+
 /* Animated waveform bars — shown on phrase card during TTS playback */
 @keyframes waveBar {
   0%, 100% { transform: scaleY(0.35); }

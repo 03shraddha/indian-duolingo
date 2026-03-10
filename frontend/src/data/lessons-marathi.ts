@@ -31,11 +31,12 @@ export const marathiUnits: Unit[] = [
           {
             // Natural response to the greeting + returns the question
             id: 'mr-e3',
-            type: 'listen-identify',
+            type: 'select-phrase',
             englishText: "I'm fine, and you?",
             targetText: 'मी ठीक आहे, तुम्ही?',
             romanized: 'Mi theek aahe, tumhi?',
-            options: ["I'm fine, and you?", "I'm very tired", "Not so great", "Could be better"],
+            options: ['मी ठीक आहे, तुम्ही?', 'नमस्कार, कसे आहात?', 'खूप धन्यवाद', 'माझं नाव... आहे'],
+            optionsRomanized: ['Mi theek aahe, tumhi?', 'Namaskar, kase aahaat?', 'Khup dhanyavaad', 'Maajham naav... aahe'],
           },
           {
             // Asking someone's name — natural follow-up after greeting
@@ -80,11 +81,12 @@ export const marathiUnits: Unit[] = [
           {
             // "Sure, go ahead" — more conversational than bare "OK"
             id: 'mr-e8',
-            type: 'listen-identify',
+            type: 'select-phrase',
             englishText: 'Sure, go ahead',
             targetText: 'ठीक आहे, सांगा',
             romanized: 'Theek aahe, saanga',
-            options: ['Sure, go ahead', 'Stop right there', 'I disagree', 'Not right now'],
+            options: ['ठीक आहे, सांगा', 'हो, ठीक आहे', 'नको, धन्यवाद', 'काही हरकत नाही'],
+            optionsRomanized: ['Theek aahe, saanga', 'Ho, theek aahe', 'Nako, dhanyavaad', 'Kaahi harkat naahi'],
           },
           {
             // Sorry combined with "I don't know" — the real phrase you need
@@ -127,11 +129,12 @@ export const marathiUnits: Unit[] = [
           },
           {
             id: 'mr-e13',
-            type: 'listen-identify',
+            type: 'select-phrase',
             englishText: 'How much does this cost?',
             targetText: 'हे किती रुपयांना आहे?',
             romanized: 'He kiti rupayanaa aahe?',
-            options: ['How much does this cost?', 'Is this for sale?', 'I want to buy this', 'This is too expensive'],
+            options: ['हे किती रुपयांना आहे?', 'मला समजलं नाही', 'मला मराठी येत नाही', 'मला मदत हवी आहे'],
+            optionsRomanized: ['He kiti rupayanaa aahe?', 'Malaa samajlam naahi', 'Malaa Marathi yet naahi', 'Malaa madat havi aahe'],
           },
           {
             id: 'mr-e14',

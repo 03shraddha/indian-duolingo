@@ -31,11 +31,12 @@ export const units: Unit[] = [
           {
             // Natural response to the greeting + returns the question
             id: 'kn-e3',
-            type: 'listen-identify',
+            type: 'select-phrase',
             englishText: "I'm fine, and you?",
             targetText: 'ಚೆನ್ನಾಗಿದ್ದೇನೆ, ನೀವು?',
             romanized: 'Chennaagiddene, nivu?',
-            options: ["I'm fine, and you?", "I'm very tired", "Not so great", "Could be better"],
+            options: ['ಚೆನ್ನಾಗಿದ್ದೇನೆ, ನೀವು?', 'ನಮಸ್ಕಾರ, ಹೇಗಿದ್ದೀರಾ?', 'ತುಂಬಾ ಧನ್ಯವಾದ', 'ನನ್ನ ಹೆಸರು...'],
+            optionsRomanized: ['Chennaagiddene, nivu?', 'Namaskara, hegiddira?', 'Tumba dhanyavada', 'Nanna hesaru...'],
           },
           {
             // Asking someone's name — natural follow-up after greeting
@@ -80,11 +81,12 @@ export const units: Unit[] = [
           {
             // "Sure, go ahead" — more conversational than bare "OK"
             id: 'kn-e8',
-            type: 'listen-identify',
+            type: 'select-phrase',
             englishText: 'Sure, go ahead',
             targetText: 'ಸರಿ, ಮಾಡಿ',
             romanized: 'Sari, maadi',
-            options: ['Sure, go ahead', 'Stop right there', 'I disagree', 'Not right now'],
+            options: ['ಸರಿ, ಮಾಡಿ', 'ಹೌದು, ಸರಿ', 'ಬೇಡ, ಧನ್ಯವಾದ', 'ಪರವಾಗಿಲ್ಲ, ಬಿಡಿ'],
+            optionsRomanized: ['Sari, maadi', 'Houdu, sari', 'Beda, dhanyavada', 'Paravaagilla, bidi'],
           },
           {
             // Sorry combined with "I don't know" — the real phrase you need
@@ -127,11 +129,12 @@ export const units: Unit[] = [
           },
           {
             id: 'kn-e13',
-            type: 'listen-identify',
+            type: 'select-phrase',
             englishText: 'How much does this cost?',
             targetText: 'ಇದರ ಬೆಲೆ ಎಷ್ಟು?',
             romanized: 'Idara bele eshtu?',
-            options: ['How much does this cost?', 'Is this for sale?', 'I want to buy this', 'This is too expensive'],
+            options: ['ಇದರ ಬೆಲೆ ಎಷ್ಟು?', 'ನನಗೆ ಅರ್ಥವಾಗಲಿಲ್ಲ', 'ನನಗೆ ಕನ್ನಡ ಗೊತ್ತಿಲ್ಲ', 'ನನಗೆ ಸಹಾಯ ಬೇಕು'],
+            optionsRomanized: ['Idara bele eshtu?', 'Nanage arthavaagalilla', 'Nanage Kannada gottilla', 'Nanage sahaaya beku'],
           },
           {
             id: 'kn-e14',

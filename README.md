@@ -37,7 +37,7 @@ No account needed. Works in your browser. Takes 2–5 minutes per lesson.
 
 - **Listen & Identify** — Hear a phrase, pick the correct English meaning from four options.
 - **Speak & Repeat** — See a phrase, press and hold the mic, speak it. Get instant pronunciation feedback.
-- **Type the Translation** — See an English phrase, type it in Hindi. (Hindi only, since most users don't have Kannada/Tamil/Telugu keyboards.)
+- **Select the Phrase** — Read an English prompt, tap the matching native-script phrase from four options. Each option shows the script alongside its Roman transliteration for beginners unfamiliar with the script.
 
 **4. Track your progress** — Earn XP, build a daily streak, and watch your completion ring grow on the home screen.
 
@@ -58,6 +58,8 @@ No account needed. Works in your browser. Takes 2–5 minutes per lesson.
 The interface is warm, minimal, and distinctly Indian — without being loud. A soft cream background gives breathing space. Orange is reserved for key actions only (the Continue button, active lessons, streak badges). Cultural identity comes from subtle mandala motifs at low opacity, not heavy decoration.
 
 Script fonts are used for every language (Noto Sans Devanagari, Kannada, Tamil, Telugu, Bengali), so phrases render beautifully alongside their Roman transliterations.
+
+Answer options in the Select the Phrase exercise display native script with the Roman transliteration directly below each choice (e.g. नमस्ते / *Namaste*), making the app accessible to users who cannot yet read the script.
 
 ---
 
@@ -138,8 +140,8 @@ india-duolingo/
 │       ├── components/
 │       │   ├── exercises/
 │       │   │   ├── ListenIdentify.tsx
-│       │   │   ├── SpeakRepeat.tsx
-│       │   │   └── TypeTranslation.tsx
+│       │   │   ├── SelectPhrase.tsx
+│       │   │   └── SpeakRepeat.tsx
 │       │   ├── FeedbackOverlay.tsx
 │       │   ├── Header.tsx
 │       │   └── ProgressBar.tsx
@@ -184,11 +186,14 @@ india-duolingo/
 ```typescript
 interface Exercise {
   id: string
-  type: 'listen-identify' | 'speak-repeat' | 'type-translation'
-  englishText: string    // "Hello"
-  targetText: string     // "నమస్కారం" — phrase in target script
-  romanized: string      // "Namaskaram" — pronunciation hint
-  options?: string[]     // listen-identify only: 4 English choices
+  type: 'listen-identify' | 'speak-repeat' | 'select-phrase'
+  englishText: string          // "Hello"
+  targetText: string           // "నమస్కారం" — phrase in target script
+  romanized: string            // "Namaskaram" — pronunciation hint
+  options?: string[]           // listen-identify: 4 English choices
+                               // select-phrase: 4 native-script choices
+  optionsRomanized?: string[]  // select-phrase: Roman transliteration for
+                               // each option (parallel to options[])
 }
 ```
 
@@ -210,6 +215,8 @@ Progress is stored per language in localStorage:
 ## Notes
 
 - TTS uses `bulbul:v3` — supports all 6 languages
-- `type-translation` exercise only appears in Hindi content — all other languages are voice-first (no regional keyboard assumed)
+- All 6 languages follow the same exercise pattern per lesson: **Listen & Identify → Speak & Repeat → Select the Phrase → Speak & Repeat → Listen & Identify**
+- `select-phrase` options always include `optionsRomanized` so beginners can read choices without knowing the script
+- While loading TTS audio, a spinning ring + "Preparing audio…" label replaces the mic controls, and the word card border pulses orange — dismisses automatically when audio is ready
 - Press-and-hold mic recording works on both desktop (mousedown/mouseup) and mobile (touchstart/touchend)
 - All lessons are unlocked — no progression gates
