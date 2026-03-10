@@ -23,6 +23,39 @@ function WaveformBars({ color = '#FFC857' }: { color?: string }) {
 
 const INSTR = 'listen and choose the correct meaning'
 
+/** Derive a short contextual hint from the English text.
+ *  Must NOT give away the answer — just narrow the category. */
+function getHint(text: string): string | null {
+  const t = text.toLowerCase()
+  if (t === 'yes') return 'agreement'
+  if (t === 'no') return 'refusal'
+  if (t.includes('hello') || t.includes('greet')) return 'a greeting'
+  if (t.includes('thank')) return 'showing gratitude'
+  if (t.includes('sorry') || t.includes('excuse me')) return 'an apology'
+  if (t.includes('how are you')) return 'asking about wellbeing'
+  if (t.includes('my name')) return 'introducing yourself'
+  if (t.includes('ok') || t === 'ok / fine') return 'mild acceptance'
+  if (t.includes('no problem') || t.includes('not at all')) return 'putting someone at ease'
+  if (t.includes("don't understand")) return 'struggling to follow'
+  if (t.includes('how much') || t.includes('cost') || t.includes('price')) return 'about the price'
+  if (t.includes('need help') || t.includes('want help')) return 'asking for assistance'
+  if (t.includes("don't need") || t.includes('no need')) return 'declining an offer'
+  if (t.includes("don't have time") || t.includes('no time')) return 'about being busy'
+  if (t.includes('coming') && t.includes('minute')) return 'about timing'
+  if (t.includes('understood') || t === 'i see') return 'after listening to someone'
+  if (t.includes('where are you going')) return 'asking about destination'
+  if (t.includes('did you eat') || t.includes('have you eaten')) return 'checking on someone'
+  if (t.includes('how was') || t.includes("how's")) return 'asking for an update'
+  if (t.includes('what are you doing')) return 'asking about activity'
+  if (t.includes('when will you')) return 'asking about timing'
+  if (t.includes('can you')) return 'making a request'
+  if (t.includes('please')) return 'a polite request'
+  if (t.includes('want to meet') || t.includes('let\'s meet')) return 'making plans'
+  if (t.includes('will come') || t.includes("i'll be")) return 'about arriving'
+  if (t.includes('very good') || t.includes('well done')) return 'giving praise'
+  return null
+}
+
 export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
   const { play } = useAudio()
   const [loading, setLoading] = useState(true)
@@ -129,6 +162,7 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
 
   const options = exercise.options ?? [exercise.englishText]
   const scriptVisible = segments.slice(0, scriptLen).join('')
+  const hint = getHint(exercise.englishText)
 
   return (
     <div className="flex flex-col items-center gap-4 sm:gap-6 px-3 sm:px-4 py-5 sm:py-6 max-w-md mx-auto w-full">
@@ -183,6 +217,13 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
         <p style={{ fontSize: 12, color: '#C0BAB2', marginTop: 4 }}>
           {loading ? 'loading…' : 'tap to hear again'}
         </p>
+
+        {/* Contextual hint — shown once romanization is visible, doesn't reveal the answer */}
+        {hint && romaVisible && !selected && (
+          <p className="text-xs font-medium mt-2" style={{ color: '#A8B5C8' }}>
+            💡 {hint}
+          </p>
+        )}
       </button>
 
       {error && (

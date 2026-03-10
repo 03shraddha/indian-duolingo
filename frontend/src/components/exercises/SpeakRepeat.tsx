@@ -143,7 +143,8 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
     if (recorderRef.current?.state === 'recording') recorderRef.current.stop()
   }
 
-  const fb   = score !== null ? qualitativeFeedback(score, exercise.targetText) : null
+  // Pass englishText so the note reads in English, not the target script
+  const fb   = score !== null ? qualitativeFeedback(score, exercise.englishText) : null
   const done = score !== null && !processing
 
   // Card colors shift when result is in
