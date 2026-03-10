@@ -145,12 +145,21 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
     if (recording || processing) return
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      // Prefer opus codec — smaller files = faster STT upload on mobile.
-      // audioBitsPerSecond 24000 is ample for speech recognition (default is ~128kbps).
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : 'audio/webm'
-      const recorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 24000 })
+      // Pick the best supported MIME type. Order matters: prefer opus (small),
+      // fall back to mp4 (iOS Safari), then plain webm.
+      const CANDIDATES = [
+        { mime: 'audio/webm;codecs=opus', ext: 'webm' },
+        { mime: 'audio/ogg;codecs=opus',  ext: 'ogg'  },
+        { mime: 'audio/mp4',              ext: 'mp4'  },
+        { mime: 'audio/webm',             ext: 'webm' },
+      ]
+      const chosen = CANDIDATES.find(c => MediaRecorder.isTypeSupported(c.mime))
+        ?? { mime: '', ext: 'webm' }
+      const recOpts = chosen.mime
+        ? { mimeType: chosen.mime, audioBitsPerSecond: 24000 }
+        : { audioBitsPerSecond: 24000 }
+
+      const recorder = new MediaRecorder(stream, recOpts)
       chunksRef.current = []
       recorderRef.current = recorder
       recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }
@@ -159,17 +168,20 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
         setRecording(false)
         setProcessing(true)
         try {
-          const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
-          const text = await stt(blob, langCfg.languageCode)
+          const actualMime = recorder.mimeType || chosen.mime || 'audio/webm'
+          const ext = CANDIDATES.find(c => actualMime.startsWith(c.mime.split(';')[0]))?.ext ?? chosen.ext
+          const blob = new Blob(chunksRef.current, { type: actualMime })
+          const text = await stt(blob, langCfg.languageCode, ext)
           setTranscript(text)
           setScore(similarity(text, exercise.targetText))
-        } catch (e: unknown) {
-          setError(e instanceof Error ? e.message : 'STT failed')
+        } catch {
+          // Show a user-friendly message — never expose raw API errors
+          setError("Couldn't process your recording. Try again.")
         } finally { setProcessing(false) }
       }
       recorder.start()
       setRecording(true)
-    } catch { setError('Microphone access denied.') }
+    } catch { setError('Microphone access denied. Check browser permissions.') }
   }
 
   function stopRecording() {

@@ -17,6 +17,9 @@ async def speech_to_text(
         audio_bytes = await audio_file.read()
         # Wrap bytes in a file-like object so the SDK can read it
         audio_stream = io.BytesIO(audio_bytes)
+        # Use the uploaded filename so Sarvam SDK can infer the audio codec.
+        # The frontend sets a correct extension (webm, mp4, ogg) based on
+        # MediaRecorder.mimeType so this will be right per device.
         audio_stream.name = audio_file.filename or "audio.webm"
 
         response = client.speech_to_text.transcribe(
@@ -25,4 +28,11 @@ async def speech_to_text(
         )
         return {"transcript": response.transcript}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Extract only the human-readable part from verbose SDK exceptions.
+        # The SDK str(e) can include raw HTTP headers and response bodies.
+        msg = str(e)
+        # Try to pull out the Sarvam error message field if present
+        import re
+        match = re.search(r"'message':\s*'([^']+)'", msg)
+        clean = match.group(1) if match else "Speech recognition failed."
+        raise HTTPException(status_code=500, detail=clean)

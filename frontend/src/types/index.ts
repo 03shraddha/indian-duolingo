@@ -1,4 +1,4 @@
-export type ExerciseType = 'listen-identify' | 'speak-repeat' | 'type-translation'
+export type ExerciseType = 'listen-identify' | 'speak-repeat' | 'select-phrase'
 
 export interface Exercise {
   id: string

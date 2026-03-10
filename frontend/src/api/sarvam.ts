@@ -74,9 +74,10 @@ export function preloadTTS(opts: TTSOptions): void {
  * Transcribe an audio Blob (webm/wav) to text.
  * Returns the transcript string.
  */
-export async function stt(audioBlob: Blob, languageCode = 'hi-IN'): Promise<string> {
+export async function stt(audioBlob: Blob, languageCode = 'hi-IN', ext = 'webm'): Promise<string> {
   const form = new FormData()
-  form.append('audio_file', audioBlob, 'recording.webm')
+  // Use the correct extension so the backend/SDK can infer the audio codec.
+  form.append('audio_file', audioBlob, `recording.${ext}`)
   form.append('language_code', languageCode)
 
   const res = await fetch(`${BASE}/stt`, { method: 'POST', body: form })

@@ -31,10 +31,11 @@ export const units: Unit[] = [
           },
           {
             id: 'e3',
-            type: 'type-translation',
+            type: 'select-phrase',
             englishText: 'Not right now',
             targetText: 'अभी नहीं',
             romanized: 'Abhi nahin',
+            options: ['अभी नहीं', 'हाँ ठीक है', 'चलो', 'बाद में'],
           },
           {
             id: 'e4',
@@ -75,10 +76,11 @@ export const units: Unit[] = [
           },
           {
             id: 'e8',
-            type: 'type-translation',
+            type: 'select-phrase',
             englishText: "Let's go",
             targetText: 'चलो',
             romanized: 'Chalo',
+            options: ['चलो', 'अभी नहीं', 'थोड़ा रुको', 'समझ गया'],
           },
           {
             id: 'e9',
@@ -119,10 +121,11 @@ export const units: Unit[] = [
           },
           {
             id: 'e13',
-            type: 'type-translation',
+            type: 'select-phrase',
             englishText: 'I am hungry',
             targetText: 'मुझे भूख लगी है',
             romanized: 'Mujhe bhookh lagi hai',
+            options: ['मुझे भूख लगी है', 'मुझे मदद चाहिए', 'मैं बहुत थका हूँ', 'मुझे नींद आ रही है'],
           },
           {
             id: 'e14',
@@ -141,10 +144,11 @@ export const units: Unit[] = [
           },
           {
             id: 'e16',
-            type: 'type-translation',
+            type: 'select-phrase',
             englishText: 'I want to sleep',
             targetText: 'मुझे नींद आ रही है',
             romanized: 'Mujhe neend aa rahi hai',
+            options: ['मुझे नींद आ रही है', 'मुझे भूख लगी है', 'मेरे पास टाइम नहीं है', 'मुझे मदद चाहिए'],
           },
         ],
       },
@@ -181,10 +185,11 @@ export const units: Unit[] = [
           },
           {
             id: 'e19',
-            type: 'type-translation',
+            type: 'select-phrase',
             englishText: 'When will you come?',
             targetText: 'तुम कब आओगे?',
             romanized: 'Tum kab aaoge?',
+            options: ['तुम कब आओगे?', 'तुम कहाँ जा रहे हो?', 'खाना खाया?', 'दिन कैसा रहा?'],
           },
           {
             id: 'e20',
@@ -225,10 +230,11 @@ export const units: Unit[] = [
           },
           {
             id: 'e24',
-            type: 'type-translation',
+            type: 'select-phrase',
             englishText: 'I will come in the evening',
             targetText: 'शाम को आऊँगा',
             romanized: 'Shaam ko aaunga',
+            options: ['शाम को आऊँगा', 'अभी काम कर रहा हूँ', 'मैं घर जा रहा हूँ', 'हाँ, अभी खाया'],
           },
           {
             id: 'e25',
@@ -269,10 +275,11 @@ export const units: Unit[] = [
           },
           {
             id: 'e29',
-            type: 'type-translation',
+            type: 'select-phrase',
             englishText: 'I will reach by 6',
             targetText: 'छह बजे तक पहुँचूँगा',
             romanized: 'Chhah baje tak pahunchunga',
+            options: ['छह बजे तक पहुँचूँगा', 'साथ चलते हैं', 'पता भेज दो', 'आज नहीं हो पाएगा'],
           },
           {
             id: 'e30',
@@ -324,10 +331,11 @@ export const units: Unit[] = [
           },
           {
             id: 'e34',
-            type: 'type-translation',
+            type: 'select-phrase',
             englishText: 'Less sugar',
             targetText: 'कम चीनी',
             romanized: 'Kam cheeni',
+            options: ['कम चीनी', 'दो चाय देना', 'चाय बहुत अच्छी है', 'कितने पैसे हुए?'],
           },
           {
             id: 'e35',
@@ -368,10 +376,11 @@ export const units: Unit[] = [
           },
           {
             id: 'e39',
-            type: 'type-translation',
+            type: 'select-phrase',
             englishText: 'Do you have change?',
             targetText: 'छुट्टे हैं क्या?',
             romanized: 'Chutte hain kya?',
+            options: ['छुट्टे हैं क्या?', 'इसका दाम क्या है?', 'थोड़ा कम करो', 'अलग से पैक करो'],
           },
           {
             id: 'e40',
@@ -390,10 +399,11 @@ export const units: Unit[] = [
           },
           {
             id: 'e42',
-            type: 'type-translation',
+            type: 'select-phrase',
             englishText: 'The vegetables are fresh',
             targetText: 'सब्ज़ी ताज़ी है',
             romanized: 'Sabzi taazi hai',
+            options: ['सब्ज़ी ताज़ी है', 'छुट्टे हैं क्या?', 'फिर आऊँगा', 'अलग से पैक करो'],
           },
         ],
       },
@@ -419,10 +429,11 @@ export const units: Unit[] = [
           },
           {
             id: 'e45',
-            type: 'type-translation',
+            type: 'select-phrase',
             englishText: 'Please do it today',
             targetText: 'आज ही कर देना',
             romanized: 'Aaj hi kar dena',
+            options: ['आज ही कर देना', 'काम लगभग हो गया', 'करवा देता हूँ', 'कोई दिक्कत हो तो बोलो'],
           },
           {
             id: 'e46',
@@ -441,10 +452,11 @@ export const units: Unit[] = [
           },
           {
             id: 'e48',
-            type: 'type-translation',
+            type: 'select-phrase',
             englishText: 'The work is done',
             targetText: 'काम हो गया',
             romanized: 'Kaam ho gaya',
+            options: ['काम हो गया', 'आज ही कर देना', 'थोड़ा जल्दी करो', 'करवा देता हूँ'],
           },
         ],
       },

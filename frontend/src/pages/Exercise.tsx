@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Header from '../components/Header'
 import ProgressBar from '../components/ProgressBar'
 import ListenIdentify from '../components/exercises/ListenIdentify'
 import SpeakRepeat from '../components/exercises/SpeakRepeat'
-import TypeTranslation from '../components/exercises/TypeTranslation'
+import SelectPhrase from '../components/exercises/SelectPhrase'
 import { getLessonById } from '../data/lessons'
 import { useProgress } from '../hooks/useProgress'
 import { useLanguage } from '../hooks/useLanguage'
@@ -40,6 +40,12 @@ export default function Exercise() {
   const [currentIdx, setCurrentIdx] = useState(0)
   const [finished, setFinished] = useState(false)
   const [showExitModal, setShowExitModal] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Reset scroll position to top whenever the exercise changes
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 })
+  }, [currentIdx])
 
   const exercise: ExerciseType | undefined = exercises[currentIdx]
 
@@ -181,15 +187,15 @@ export default function Exercise() {
           </button>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {exercise && exercise.type === 'listen-identify' && (
           <ListenIdentify key={exercise.id} exercise={exercise} langCfg={langCfg} onResult={handleContinue} />
         )}
         {exercise && exercise.type === 'speak-repeat' && (
           <SpeakRepeat key={exercise.id} exercise={exercise} langCfg={langCfg} onResult={handleContinue} />
         )}
-        {exercise && exercise.type === 'type-translation' && (
-          <TypeTranslation key={exercise.id} exercise={exercise} langCfg={langCfg} onResult={handleContinue} />
+        {exercise && exercise.type === 'select-phrase' && (
+          <SelectPhrase key={exercise.id} exercise={exercise} langCfg={langCfg} onResult={handleContinue} />
         )}
       </div>
     </div>
