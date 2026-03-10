@@ -28,11 +28,29 @@ function similarity(a: string, b: string): number {
 
 const PASS = 0.50
 
-function qualitativeFeedback(score: number, target: string) {
-  if (score >= 0.85) return { ok: true,  label: '🎉 Excellent!',       note: 'Your pronunciation is spot on.' }
-  if (score >= 0.65) return { ok: true,  label: '👍 Good try!',        note: `Focus on the sounds in "${target}" more carefully.` }
-  if (score >= PASS)  return { ok: true,  label: '🌱 Almost there!',   note: 'Listen once more and speak slowly.' }
-  return               { ok: false, label: '💪 Keep practising',       note: 'Try listening a few times, then speak.' }
+function qualitativeFeedback(score: number, romanized: string) {
+  // Extract the first distinct word/chunk from romanized to name in the note
+  const firstChunk = romanized.split(/[,!?]/)[0].trim()
+  if (score >= 0.85) return {
+    ok: true,
+    label: '🎉 Excellent!',
+    note: 'Your pronunciation is spot on — great work!',
+  }
+  if (score >= 0.65) return {
+    ok: true,
+    label: '👍 Good try!',
+    note: `Close! Focus on the ending sounds — say "${firstChunk}" slowly, one syllable at a time.`,
+  }
+  if (score >= PASS) return {
+    ok: true,
+    label: '🌱 Almost there!',
+    note: `Use the slow ▶ speed, then try repeating "${firstChunk}" aloud before recording.`,
+  }
+  return {
+    ok: false,
+    label: '💪 Keep practising',
+    note: `Listen to the slow version a few times and focus on matching each syllable of "${firstChunk}".`,
+  }
 }
 
 /** 4-bar waveform animation */
@@ -143,8 +161,8 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
     if (recorderRef.current?.state === 'recording') recorderRef.current.stop()
   }
 
-  // Pass englishText so the note reads in English, not the target script
-  const fb   = score !== null ? qualitativeFeedback(score, exercise.englishText) : null
+  // Pass romanized so notes reference the target pronunciation, not the script or English
+  const fb   = score !== null ? qualitativeFeedback(score, exercise.romanized) : null
   const done = score !== null && !processing
 
   // Card colors shift when result is in
@@ -220,14 +238,21 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
           <>
             <div style={{ height: 1, background: fb.ok ? '#C4D6C4' : '#F0C4B4', margin: '12px 0 10px' }} />
             <p className="text-sm text-left" style={{ color: '#6B7280' }}>{fb.note}</p>
-            {transcript !== null && (
-              <p className="text-xs text-left mt-2" style={{ color: '#9CA3AF' }}>
-                you said:{' '}
-                <span className={`font-semibold ${langCfg.scriptClass}`} style={{ color: '#1F3A5F' }}>
-                  {transcript || '(nothing detected)'}
-                </span>
-              </p>
-            )}
+            {/* Side-by-side comparison: target romanized vs what was heard */}
+            <div className="text-left mt-3" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 8px', alignItems: 'baseline' }}>
+              <span className="text-xs font-semibold" style={{ color: '#9CA3AF' }}>target:</span>
+              <span className="text-xs font-semibold" style={{ color: '#4A7459', fontStyle: 'italic' }}>
+                {exercise.romanized}
+              </span>
+              {transcript !== null && (
+                <>
+                  <span className="text-xs font-semibold" style={{ color: '#9CA3AF' }}>you said:</span>
+                  <span className={`text-xs font-semibold ${langCfg.scriptClass}`} style={{ color: '#1F3A5F' }}>
+                    {transcript || '(nothing detected)'}
+                  </span>
+                </>
+              )}
+            </div>
           </>
         )}
       </button>

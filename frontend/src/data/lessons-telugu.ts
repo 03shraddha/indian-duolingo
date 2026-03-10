@@ -3,43 +3,47 @@ import type { Unit } from '../types'
 export const units: Unit[] = [
   {
     id: 'te-unit-1',
-    title: 'Greetings & Basics',
+    title: 'Everyday Conversations',
     emoji: '🙏',
     lessons: [
       {
         id: 'te-1-1',
-        title: 'Hello & Thank You',
+        title: 'Meeting Someone',
         unitId: 'te-unit-1',
         exercises: [
           {
+            // Combined greeting — richer than isolated "Hello"
             id: 'te-e1',
             type: 'listen-identify',
-            englishText: 'Hello / Greetings',
-            targetText: 'నమస్కారం',
-            romanized: 'Namaskaram',
-            options: ['Hello / Greetings', 'Goodbye', 'Thank you', 'Sorry'],
+            englishText: 'Hello, how are you?',
+            targetText: 'నమస్కారం, ఎలా ఉన్నారు?',
+            romanized: 'Namaskaram, ela unnaru?',
+            options: ['Hello, how are you?', 'Good morning!', 'Have a nice day!', 'See you soon!'],
           },
           {
+            // Fuller gratitude — not just a bare word
             id: 'te-e2',
             type: 'speak-repeat',
-            englishText: 'Thank you',
-            targetText: 'ధన్యవాదాలు',
-            romanized: 'Dhanyavaadaalu',
+            englishText: 'Thank you very much',
+            targetText: 'చాలా ధన్యవాదాలు',
+            romanized: 'Chaala dhanyavaadaalu',
           },
           {
+            // Natural response to the greeting + returns the question
             id: 'te-e3',
             type: 'listen-identify',
-            englishText: 'How are you?',
-            targetText: 'మీరు ఎలా ఉన్నారు?',
-            romanized: 'Meeru ela unnaru?',
-            options: ['How are you?', 'Where are you?', 'Who are you?', 'What do you want?'],
+            englishText: "I'm fine, and you?",
+            targetText: 'నేను బాగున్నాను, మీరు?',
+            romanized: 'Nenu baagunnanu, meeru?',
+            options: ["I'm fine, and you?", "I'm very tired", "Not so great", "Could be better"],
           },
           {
+            // Asking someone's name — natural follow-up after greeting
             id: 'te-e4',
             type: 'speak-repeat',
-            englishText: 'I am fine',
-            targetText: 'నేను బాగున్నాను',
-            romanized: 'Nenu baagunnanu',
+            englishText: 'What is your name?',
+            targetText: 'మీ పేరు ఏమిటి?',
+            romanized: 'Mee peru emiti?',
           },
           {
             id: 'te-e5',
@@ -53,68 +57,73 @@ export const units: Unit[] = [
       },
       {
         id: 'te-1-2',
-        title: 'Yes, No & Simple Replies',
+        title: 'Everyday Replies',
         unitId: 'te-unit-1',
         exercises: [
           {
+            // Yes in context — not an isolated single word
             id: 'te-e6',
             type: 'listen-identify',
-            englishText: 'Yes',
-            targetText: 'అవును',
-            romanized: 'Avunu',
-            options: ['Yes', 'No', 'Maybe', 'Later'],
+            englishText: 'Yes, alright',
+            targetText: 'అవును, సరే',
+            romanized: 'Avunu, sare',
+            options: ['Yes, alright', 'No, not at all', 'Maybe later', "I'm not sure"],
           },
           {
+            // No in context — paired with thanks to feel natural
             id: 'te-e7',
             type: 'speak-repeat',
-            englishText: 'No',
-            targetText: 'కాదు',
-            romanized: 'Kaadu',
+            englishText: 'No thanks',
+            targetText: 'వద్దు, ధన్యవాదాలు',
+            romanized: 'Vaddu, dhanyavaadaalu',
           },
           {
+            // "Sure, go ahead" — more conversational than bare "OK"
             id: 'te-e8',
             type: 'listen-identify',
-            englishText: 'OK / Fine',
-            targetText: 'సరే',
-            romanized: 'Sare',
-            options: ['OK / Fine', 'Not OK', 'I disagree', 'Never mind'],
+            englishText: 'Sure, go ahead',
+            targetText: 'సరే, చెప్పండి',
+            romanized: 'Sare, cheppandi',
+            options: ['Sure, go ahead', 'Stop right there', 'I disagree', 'Not right now'],
           },
           {
+            // Sorry combined with "I don't know" — the real phrase you need
             id: 'te-e9',
             type: 'speak-repeat',
-            englishText: 'Sorry',
-            targetText: 'సారీ',
-            romanized: 'Saari',
+            englishText: "Sorry, I don't know",
+            targetText: 'సారీ, నాకు తెలియదు',
+            romanized: 'Saari, naaku teliyadu',
           },
           {
             id: 'te-e10',
             type: 'listen-identify',
-            englishText: 'No problem',
-            targetText: 'పర్వాలేదు',
-            romanized: 'Parvaaledu',
-            options: ['No problem', 'Big problem', 'I have a problem', 'What is the problem?'],
+            englishText: 'No problem at all',
+            targetText: 'పర్వాలేదు, వదిలేయండి',
+            romanized: 'Parvaaledu, vadileeyandi',
+            options: ['No problem at all', 'This is a problem', 'Can you help me?', 'What happened?'],
           },
         ],
       },
       {
         id: 'te-1-3',
-        title: 'Basic Expressions',
+        title: 'Getting Around',
         unitId: 'te-unit-1',
         exercises: [
           {
             id: 'te-e11',
             type: 'listen-identify',
-            englishText: "I don't understand",
+            englishText: "I didn't understand that",
             targetText: 'నాకు అర్థం కాలేదు',
             romanized: 'Naaku artham kaaledu',
-            options: ["I don't understand", 'I understand', 'Please repeat', 'Speak louder'],
+            options: ["I didn't understand that", 'I understood everything', 'Please say it again', 'Speak more slowly'],
           },
           {
+            // Replaces "Come here" — far more useful for a learner
             id: 'te-e12',
             type: 'speak-repeat',
-            englishText: 'Come here',
-            targetText: 'ఇక్కడికి రా',
-            romanized: 'Ikkadiki raa',
+            englishText: "I don't know Telugu",
+            targetText: 'నాకు తెలుగు రాదు',
+            romanized: 'Naaku Telugu raadu',
           },
           {
             id: 'te-e13',
@@ -122,14 +131,14 @@ export const units: Unit[] = [
             englishText: 'How much does this cost?',
             targetText: 'ఇది ఎంత?',
             romanized: 'Idi enta?',
-            options: ['How much does this cost?', 'Is this for sale?', 'I want to buy this', 'This is expensive'],
+            options: ['How much does this cost?', 'Is this for sale?', 'I want to buy this', 'This is too expensive'],
           },
           {
             id: 'te-e14',
             type: 'speak-repeat',
-            englishText: 'Where is the bathroom?',
-            targetText: 'బాత్రూమ్ ఎక్కడ ఉంది?',
-            romanized: 'Bathroom ekkada undi?',
+            englishText: 'Where is the toilet?',
+            targetText: 'టాయిలెట్ ఎక్కడ ఉంది?',
+            romanized: 'Toilet ekkada undi?',
           },
           {
             id: 'te-e15',
