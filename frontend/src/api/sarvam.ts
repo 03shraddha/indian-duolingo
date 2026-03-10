@@ -4,6 +4,13 @@
 // In development, falls back to '/api' which Vite proxies to localhost:8000
 const BASE = (import.meta.env.VITE_API_URL ?? '/api') + ''
 
+/** Returns an AbortSignal that fires after `ms` milliseconds. */
+function timeoutSignal(ms: number): AbortSignal {
+  const ctrl = new AbortController()
+  setTimeout(() => ctrl.abort(), ms)
+  return ctrl.signal
+}
+
 // ── Text-to-Speech ────────────────────────────────────────────────────────────
 
 export interface TTSOptions {
@@ -39,6 +46,7 @@ export async function tts(opts: TTSOptions): Promise<string> {
       speaker: opts.speaker ?? 'anushka',
       pace: opts.pace ?? 1.0,
     }),
+    signal: timeoutSignal(35_000), // 35s — slightly over backend's 30s
   })
     .then(async (res) => {
       if (!res.ok) {
@@ -80,7 +88,7 @@ export async function stt(audioBlob: Blob, languageCode = 'hi-IN', ext = 'webm')
   form.append('audio_file', audioBlob, `recording.${ext}`)
   form.append('language_code', languageCode)
 
-  const res = await fetch(`${BASE}/stt`, { method: 'POST', body: form })
+  const res = await fetch(`${BASE}/stt`, { method: 'POST', body: form, signal: timeoutSignal(35_000) })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.detail ?? `STT failed (${res.status})`)

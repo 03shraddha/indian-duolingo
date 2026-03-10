@@ -234,8 +234,19 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
         )}
       </button>
 
-      {error && (
-        <p className="text-sm text-center" style={{ color: '#E07A5F' }}>⚠️ Could not load audio.</p>
+      {/* Error state — show a skip button so the user is never permanently blocked */}
+      {error && !selected && (
+        <div className="w-full rounded-2xl px-4 py-3 flex items-center justify-between gap-3"
+          style={{ background: '#FEF3EE', border: '1.5px solid #F0C4B4' }}>
+          <p className="text-sm font-medium" style={{ color: '#E07A5F' }}>⚠️ Audio unavailable</p>
+          <button
+            onClick={() => onResult(false)}
+            className="text-xs font-bold px-3 py-1.5 rounded-full active:scale-95 transition-transform flex-shrink-0"
+            style={{ background: '#FF7A00', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}
+          >
+            Skip →
+          </button>
+        </div>
       )}
 
       {/* Answer options — warm idle, indigo for correct, terracotta for wrong */}

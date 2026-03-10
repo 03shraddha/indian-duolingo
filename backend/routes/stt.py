@@ -1,9 +1,12 @@
 import os
 import io
+import asyncio
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from sarvamai import SarvamAI
 
 router = APIRouter()
+
+TIMEOUT_SECONDS = 30
 
 
 @router.post("/stt")
@@ -11,28 +14,30 @@ async def speech_to_text(
     audio_file: UploadFile = File(...),
     language_code: str = Form(default="hi-IN"),
 ):
-    """Transcribe audio using Sarvam saarika:v2.5."""
+    """Transcribe audio using Sarvam saarika."""
     client = SarvamAI(api_subscription_key=os.getenv("SARVAM_API_KEY"))
     try:
         audio_bytes = await audio_file.read()
-        # Wrap bytes in a file-like object so the SDK can read it
         audio_stream = io.BytesIO(audio_bytes)
-        # Use the uploaded filename so Sarvam SDK can infer the audio codec.
-        # The frontend sets a correct extension (webm, mp4, ogg) based on
-        # MediaRecorder.mimeType so this will be right per device.
+        # Use the uploaded filename so the SDK can infer the audio codec.
+        # The frontend sets the correct extension (webm/ogg/mp4) per device.
         audio_stream.name = audio_file.filename or "audio.webm"
 
-        response = client.speech_to_text.transcribe(
-            file=audio_stream,
-            language_code=language_code,
+        response = await asyncio.wait_for(
+            asyncio.get_event_loop().run_in_executor(
+                None,
+                lambda: client.speech_to_text.transcribe(
+                    file=audio_stream,
+                    language_code=language_code,
+                ),
+            ),
+            timeout=TIMEOUT_SECONDS,
         )
         return {"transcript": response.transcript}
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Speech recognition timed out. Please try again.")
     except Exception as e:
-        # Extract only the human-readable part from verbose SDK exceptions.
-        # The SDK str(e) can include raw HTTP headers and response bodies.
         msg = str(e)
-        # Try to pull out the Sarvam error message field if present
         import re
         match = re.search(r"'message':\s*'([^']+)'", msg)
-        clean = match.group(1) if match else "Speech recognition failed."
-        raise HTTPException(status_code=500, detail=clean)
+        raise HTTPException(status_code=500, detail=match.group(1) if match else "Speech recognition failed.")

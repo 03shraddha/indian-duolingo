@@ -79,8 +79,9 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
   const [transcript, setTranscript] = useState<string | null>(null)
   const [error,      setError]      = useState<string | null>(null)
 
-  const recorderRef = useRef<MediaRecorder | null>(null)
-  const chunksRef   = useRef<Blob[]>([])
+  const recorderRef    = useRef<MediaRecorder | null>(null)
+  const chunksRef      = useRef<Blob[]>([])
+  const maxRecTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const playWithFeedback = useCallback(async (base64: string) => {
     setPlaying(true)
@@ -171,7 +172,13 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
           const actualMime = recorder.mimeType || chosen.mime || 'audio/webm'
           const ext = CANDIDATES.find(c => actualMime.startsWith(c.mime.split(';')[0]))?.ext ?? chosen.ext
           const blob = new Blob(chunksRef.current, { type: actualMime })
-          const text = await stt(blob, langCfg.languageCode, ext)
+          // Race STT against a 40-second timeout so the spinner never loops forever
+          const text = await Promise.race([
+            stt(blob, langCfg.languageCode, ext),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('timeout')), 40_000)
+            ),
+          ])
           setTranscript(text)
           setScore(similarity(text, exercise.targetText))
         } catch {
@@ -181,10 +188,15 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
       }
       recorder.start()
       setRecording(true)
+      // Auto-stop after 60 s so the user is never stuck holding the mic
+      maxRecTimerRef.current = setTimeout(() => {
+        if (recorderRef.current?.state === 'recording') recorderRef.current.stop()
+      }, 60_000)
     } catch { setError('Microphone access denied. Check browser permissions.') }
   }
 
   function stopRecording() {
+    if (maxRecTimerRef.current) { clearTimeout(maxRecTimerRef.current); maxRecTimerRef.current = null }
     if (recorderRef.current?.state === 'recording') recorderRef.current.stop()
   }
 
@@ -347,7 +359,18 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
         </div>
       )}
 
-      {error && <p className="text-sm text-center" style={{ color: '#E07A5F' }}>⚠️ {error}</p>}
+      {error && !done && (
+        <div className="w-full flex flex-col items-center gap-2">
+          <p className="text-sm text-center" style={{ color: '#E07A5F' }}>⚠️ {error}</p>
+          <button
+            onClick={() => setError(null)}
+            className="text-xs font-semibold px-4 py-1.5 rounded-full active:scale-95 transition-transform"
+            style={{ background: '#F0EDE8', color: '#6B7280', border: '1px solid #EDE8E0', cursor: 'pointer' }}
+          >
+            Try again
+          </button>
+        </div>
+      )}
 
       {/* Continue button — appears after result */}
       {done && fb && (

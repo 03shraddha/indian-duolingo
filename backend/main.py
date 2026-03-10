@@ -4,7 +4,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.tts import router as tts_router
 from routes.stt import router as stt_router
-from routes.translate import router as translate_router
 
 load_dotenv()
 
@@ -31,7 +30,6 @@ app.add_middleware(
 
 app.include_router(tts_router, prefix="/api")
 app.include_router(stt_router, prefix="/api")
-app.include_router(translate_router, prefix="/api")
 
 
 @app.get("/")
