@@ -263,6 +263,12 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
 
         <p style={{ fontSize: 12, color: '#9CA3AF' }}>{exercise.englishText}</p>
 
+        {loadingTTS && (
+          <p style={{ fontSize: 12, color: '#C0BAB2', marginTop: 6 }}>
+            fetching audio, may take a few seconds…
+          </p>
+        )}
+
         {done && fb && (
           <>
             <div style={{ height: 1, background: fb.ok ? '#C4D6C4' : '#F0C4B4', margin: '12px 0 10px' }} />

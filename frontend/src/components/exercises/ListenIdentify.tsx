@@ -135,6 +135,7 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
     let cancelled = false
     setLoading(true)
     setSelected(null)
+    setError(null)      // clear any stale error from the previous exercise
     setScriptLen(0)
     setRomaVisible(false)
 
@@ -225,7 +226,7 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
         </p>
 
         <p style={{ fontSize: 12, color: '#C0BAB2', marginTop: 4 }}>
-          {loading ? 'loading…' : 'tap to hear again'}
+          {loading ? 'fetching audio, may take a few seconds…' : 'tap to hear again'}
         </p>
 
         {/* Contextual hint — shown once romanization is visible, doesn't reveal the answer */}
