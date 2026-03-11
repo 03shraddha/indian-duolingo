@@ -123,11 +123,12 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
         setLoading(false)
         revealScript()
       })
-    } catch {
-      // ignore playback errors on replay
     } finally {
+      // Always unblock the UI — onPlay may not have fired if audio failed
+      setLoading(false)
       setPlaying(false)
     }
+    // Errors propagate to run() so retry logic fires
   }
 
   useEffect(() => {

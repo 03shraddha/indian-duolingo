@@ -93,6 +93,8 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
     try {
       await playStream(opts, onPlay)
     } finally {
+      // Always unblock — onPlay (which hides spinner) may not fire on error
+      setLoadingTTS(false)
       setPlaying(false)
     }
   }, [playStream])

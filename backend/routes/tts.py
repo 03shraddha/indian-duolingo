@@ -133,5 +133,9 @@ async def tts_stream(req: TTSRequest):
     return StreamingResponse(
         generate(),
         media_type="audio/mpeg",
-        headers={"Cache-Control": "no-cache", "X-Content-Type-Options": "nosniff"},
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Content-Type-Options": "nosniff",
+            "X-Accel-Buffering": "no",   # Disable nginx proxy buffering on Render
+        },
     )

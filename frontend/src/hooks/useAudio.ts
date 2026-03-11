@@ -1,9 +1,8 @@
 import { useCallback, useRef } from 'react'
-import { startTTSStream, type TTSOptions } from '../api/sarvam'
+import { startTTSStream, tts, type TTSOptions } from '../api/sarvam'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-/** Play a blob/object URL, resolving when playback ends. Revokes the URL after playback. */
 function playBlobUrl(
   url: string,
   audioRef: React.MutableRefObject<HTMLAudioElement | null>,
@@ -17,9 +16,22 @@ function playBlobUrl(
   })
 }
 
+function playBase64(
+  base64: string,
+  audioRef: React.MutableRefObject<HTMLAudioElement | null>,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const audio = new Audio(`data:audio/wav;base64,${base64}`)
+    audioRef.current = audio
+    audio.onended = () => resolve()
+    audio.onerror = () => reject(new Error('Audio playback failed'))
+    audio.play().catch(reject)
+  })
+}
+
 /**
- * Pipe a ReadableStream<Uint8Array> into a MediaSource and play via an <audio> element.
- * Calls onPlay the moment audio.play() fires — i.e. when the first chunk is buffered.
+ * Pipe a ReadableStream into MediaSource — audio plays as first chunk arrives.
+ * onPlay fires the moment audio.play() is called (first chunk buffered).
  */
 function playWithMediaSource(
   stream: ReadableStream<Uint8Array>,
@@ -63,11 +75,9 @@ function playWithMediaSource(
         }
 
         if (sourceBuffer.updating) await waitForUpdate()
-        // Copy into a fresh ArrayBuffer — avoids SharedArrayBuffer typing issue
         sourceBuffer.appendBuffer(new Uint8Array(value).buffer as ArrayBuffer)
         await waitForUpdate()
 
-        // Start playback after the first chunk is buffered
         if (!playStarted) {
           playStarted = true
           audio.play()
@@ -95,7 +105,6 @@ export function useAudio() {
     }
   }
 
-  /** Play a base64-encoded WAV string (legacy path). */
   const play = useCallback((base64: string): Promise<void> => {
     stopCurrent()
     return new Promise((resolve, reject) => {
@@ -109,33 +118,39 @@ export function useAudio() {
   }, [])
 
   /**
-   * Stream TTS audio — playback starts as soon as the first MP3 chunk arrives.
+   * Stream TTS — plays as first chunk arrives via MediaSource.
+   * Falls back to full-blob playback if MSE fails, and falls back to
+   * the non-streaming /tts endpoint if the stream endpoint itself fails.
    *
-   * Uses MediaSource Extensions (MSE) when supported (Chrome, Firefox, Edge, Safari 15+).
-   * Falls back to downloading the full blob then playing — still faster than base64.
-   *
-   * @param onPlay  Called the moment audio.play() fires (first chunk buffered).
-   *                Use this to hide spinners, reveal script text, etc.
+   * onPlay fires when audio.play() is called — use it to hide spinners.
    */
   const playStream = useCallback(async (opts: TTSOptions, onPlay?: () => void): Promise<void> => {
     stopCurrent()
 
-    const { stream } = await startTTSStream(opts)
-    const mimeType = 'audio/mpeg'
+    try {
+      const { stream } = await startTTSStream(opts)
+      const mimeType = 'audio/mpeg'
 
-    if (typeof MediaSource !== 'undefined' && MediaSource.isTypeSupported(mimeType)) {
-      try {
-        return await playWithMediaSource(stream, mimeType, audioRef, onPlay)
-      } catch {
-        // MSE failed — fall through to blob fallback
+      if (typeof MediaSource !== 'undefined' && MediaSource.isTypeSupported(mimeType)) {
+        try {
+          return await playWithMediaSource(stream, mimeType, audioRef, onPlay)
+        } catch {
+          // MSE failed — fall through to blob
+        }
       }
-    }
 
-    // Fallback: collect full stream → blob URL → play
-    const blob = await new Response(stream, { headers: { 'Content-Type': mimeType } }).blob()
-    const url = URL.createObjectURL(blob)
-    onPlay?.()
-    return playBlobUrl(url, audioRef)
+      // Blob fallback: collect stream → play
+      const blob = await new Response(stream, { headers: { 'Content-Type': mimeType } }).blob()
+      const url = URL.createObjectURL(blob)
+      onPlay?.()
+      return playBlobUrl(url, audioRef)
+
+    } catch {
+      // Streaming endpoint failed — fall back to non-streaming /tts
+      const base64 = await tts(opts)
+      onPlay?.()
+      return playBase64(base64, audioRef)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
