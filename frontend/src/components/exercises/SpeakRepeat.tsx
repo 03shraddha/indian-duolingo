@@ -113,21 +113,26 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
 
     const run = async () => {
       try {
-        // onPlay fires on first chunk — hide spinner and enable controls immediately
+        // onPlay fires on first chunk — hide spinner, clear any stale error
         await playWithFeedback(normalOpts, () => {
-          if (!cancelled) setLoadingTTS(false)
+          if (!cancelled) { setLoadingTTS(false); setError(null) }
         })
-      } catch {
+      } catch (e) {
         if (cancelled) return
+        // iOS Safari blocks autoplay without user gesture — degrade silently to "tap to hear"
+        if ((e as DOMException)?.name === 'NotAllowedError') { setLoadingTTS(false); return }
         // Retry once after 1.5 s (backend cold-start)
         setTimeout(async () => {
           if (cancelled) return
           try {
             await playWithFeedback(normalOpts, () => {
-              if (!cancelled) setLoadingTTS(false)
+              if (!cancelled) { setLoadingTTS(false); setError(null) }
             })
           } catch (retryErr) {
-            if (!cancelled) { setError((retryErr as Error).message); setLoadingTTS(false) }
+            if (cancelled) return
+            if ((retryErr as DOMException)?.name === 'NotAllowedError') { setLoadingTTS(false); return }
+            setError((retryErr as Error).message)
+            setLoadingTTS(false)
           }
         }, 1500)
       }

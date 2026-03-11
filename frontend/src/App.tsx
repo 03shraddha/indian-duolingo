@@ -8,6 +8,11 @@ import Exercise from './pages/Exercise'
 const savedFontSize = localStorage.getItem('idl-font-size') ?? 'normal'
 document.documentElement.setAttribute('data-fontsize', savedFontSize)
 
+// Wake the Render backend immediately on app load — fires before any component renders,
+// giving the backend maximum warm-up time while the user reads the language select screen.
+const _backendBase = (import.meta.env.VITE_API_URL ?? '/api') as string
+fetch(`${_backendBase}/health`).catch(() => {})
+
 function App() {
   return (
     <BrowserRouter>

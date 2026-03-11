@@ -49,7 +49,22 @@ export default function Exercise() {
 
   const exercise: ExerciseType | undefined = exercises[currentIdx]
 
-  // Preload next exercise's audio while the user works on the current one
+  // Prefetch ALL exercises in the lesson the moment it loads — fires in parallel
+  // while the user is on exercise 1, so exercises 2-N play from cache instantly.
+  useEffect(() => {
+    if (!lesson) return
+    const opts = { language_code: langCfg.languageCode, speaker: langCfg.ttsDefaultSpeaker }
+    for (const ex of exercises) {
+      if (ex.type === 'listen-identify') {
+        prefetchTTSStream({ text: ex.targetText, ...opts })
+      } else if (ex.type === 'speak-repeat') {
+        prefetchTTSStream({ text: ex.targetText, ...opts, pace: 1.0 })
+        prefetchTTSStream({ text: ex.targetText, ...opts, pace: 0.7 })
+      }
+    }
+  }, [lesson?.id, langCfg])
+
+  // Also keep a single-ahead prefetch as a safety net (no-op on cache hits)
   useEffect(() => {
     if (!lesson) return
     const next = exercises[currentIdx + 1]

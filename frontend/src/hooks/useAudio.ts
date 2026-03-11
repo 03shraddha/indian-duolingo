@@ -21,7 +21,8 @@ function playBase64(
   audioRef: React.MutableRefObject<HTMLAudioElement | null>,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    const audio = new Audio(`data:audio/wav;base64,${base64}`)
+    // Backend now returns MP3 (not WAV) — use audio/mpeg MIME type
+    const audio = new Audio(`data:audio/mpeg;base64,${base64}`)
     audioRef.current = audio
     audio.onended = () => resolve()
     audio.onerror = () => reject(new Error('Audio playback failed'))
@@ -108,7 +109,8 @@ export function useAudio() {
   const play = useCallback((base64: string): Promise<void> => {
     stopCurrent()
     return new Promise((resolve, reject) => {
-      const audio = new Audio(`data:audio/wav;base64,${base64}`)
+      // Backend now returns MP3 — use audio/mpeg MIME type
+      const audio = new Audio(`data:audio/mpeg;base64,${base64}`)
       audioRef.current = audio
       audio.onended = () => resolve()
       audio.onerror = () => reject(new Error('Audio playback failed'))
@@ -132,21 +134,28 @@ export function useAudio() {
       const mimeType = 'audio/mpeg'
 
       if (typeof MediaSource !== 'undefined' && MediaSource.isTypeSupported(mimeType)) {
+        // Tee the stream BEFORE passing to MSE — if MSE partially reads then fails,
+        // the original stream is locked. blobStream stays independently readable.
+        const [mseStream, blobStream] = stream.tee()
         try {
-          return await playWithMediaSource(stream, mimeType, audioRef, onPlay)
+          return await playWithMediaSource(mseStream, mimeType, audioRef, onPlay)
         } catch {
-          // MSE failed — fall through to blob
+          // MSE failed — fall through to blob using the tee'd branch
+          const blob = await new Response(blobStream, { headers: { 'Content-Type': mimeType } }).blob()
+          const url = URL.createObjectURL(blob)
+          onPlay?.()
+          return playBlobUrl(url, audioRef)
         }
       }
 
-      // Blob fallback: collect stream → play
+      // MSE not available — collect stream → blob → play
       const blob = await new Response(stream, { headers: { 'Content-Type': mimeType } }).blob()
       const url = URL.createObjectURL(blob)
       onPlay?.()
       return playBlobUrl(url, audioRef)
 
     } catch {
-      // Streaming endpoint failed — fall back to non-streaming /tts
+      // Streaming endpoint failed entirely — fall back to non-streaming /tts (MP3)
       const base64 = await tts(opts)
       onPlay?.()
       return playBase64(base64, audioRef)

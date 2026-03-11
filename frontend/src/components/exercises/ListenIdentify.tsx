@@ -118,9 +118,10 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
   async function playWithReveal() {
     setPlaying(true)
     try {
-      // onPlay fires when first chunk is buffered — reveal script at that moment
+      // onPlay fires when first chunk is buffered — reveal script and clear any stale error
       await playStream(ttsOpts, () => {
         setLoading(false)
+        setError(null)   // clear error banner if audio starts after user tap
         revealScript()
       })
     } finally {
@@ -142,15 +143,21 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
     const run = async () => {
       try {
         await playWithReveal()
-      } catch {
+      } catch (e) {
         if (cancelled) return
+        // iOS Safari blocks autoplay without user gesture — show "tap to hear" instead of error
+        if ((e as DOMException)?.name === 'NotAllowedError') return
         // Retry once after 1.5 s (backend cold-start)
         setTimeout(async () => {
           if (cancelled) return
           try {
             await playWithReveal()
           } catch (retryErr) {
-            if (!cancelled) { setError((retryErr as Error).message); setLoading(false) }
+            if (cancelled) return
+            // Still blocked by autoplay — silently degrade to "tap to hear"
+            if ((retryErr as DOMException)?.name === 'NotAllowedError') return
+            setError((retryErr as Error).message)
+            setLoading(false)
           }
         }, 1500)
       }

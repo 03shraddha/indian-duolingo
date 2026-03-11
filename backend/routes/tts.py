@@ -12,6 +12,12 @@ import httpx
 
 router = APIRouter()
 
+# Shared httpx client — created once at import, reused across all requests.
+# Avoids per-request TLS/connection-pool init overhead (~50-100ms saved per call).
+_http_client = httpx.AsyncClient(
+    timeout=httpx.Timeout(connect=10.0, read=30.0, write=10.0, pool=5.0)
+)
+
 # Default TTS speaker per language (bulbul:v3, 45 speakers).
 LANGUAGE_SPEAKERS: dict[str, str] = {
     "hi-IN": "priya",
@@ -33,9 +39,15 @@ class TTSRequest(BaseModel):
     pace: float = 1.0
 
 
+@router.get("/health")
+async def health():
+    """Lightweight wake-up endpoint — called on app mount to prevent Render cold starts."""
+    return {"ok": True}
+
+
 @router.post("/tts")
 async def text_to_speech(req: TTSRequest):
-    """Convert text to speech using Sarvam bulbul:v3."""
+    """Convert text to speech using Sarvam bulbul:v3. Returns MP3 as base64."""
     client = SarvamAI(api_subscription_key=os.getenv("SARVAM_API_KEY"))
     speaker = req.speaker or LANGUAGE_SPEAKERS.get(req.language_code, "aditya")
     try:
@@ -48,6 +60,8 @@ async def text_to_speech(req: TTSRequest):
                     speaker=speaker,
                     pace=req.pace,
                     model="bulbul:v3",
+                    output_audio_codec="mp3",    # MP3 is 8-10x smaller than WAV default
+                    speech_sample_rate=22050,    # Sufficient for speech; reduces payload
                 ),
             ),
             timeout=TIMEOUT_SECONDS,
@@ -72,11 +86,10 @@ async def tts_stream(req: TTSRequest):
     api_key = os.getenv("SARVAM_API_KEY")
     speaker = req.speaker or LANGUAGE_SPEAKERS.get(req.language_code, "aditya")
 
-    # Open connection and check status BEFORE starting the StreamingResponse,
-    # so we can still raise a proper HTTPException on error.
-    client = httpx.AsyncClient(timeout=httpx.Timeout(connect=10.0, read=30.0, write=10.0, pool=5.0))
+    # Use the shared module-level client — do NOT close it in the generator.
+    # Check status BEFORE starting the StreamingResponse so we can raise HTTPException on error.
     try:
-        sarvam_req = client.build_request(
+        sarvam_req = _http_client.build_request(
             "POST",
             f"{SARVAM_BASE}/text-to-speech/stream",
             headers={"api-subscription-key": api_key},
@@ -87,17 +100,16 @@ async def tts_stream(req: TTSRequest):
                 "pace": req.pace,
                 "model": "bulbul:v3",
                 "output_audio_codec": "mp3",
+                "output_audio_bitrate": "64k",  # Half the default 128k — speech quality unchanged
             },
         )
-        sarvam_resp = await client.send(sarvam_req, stream=True)
+        sarvam_resp = await _http_client.send(sarvam_req, stream=True)
     except Exception as e:
-        await client.aclose()
         raise HTTPException(status_code=502, detail=f"Failed to reach Sarvam: {e}")
 
     if sarvam_resp.status_code != 200:
         error_body = await sarvam_resp.aread()
         await sarvam_resp.aclose()
-        await client.aclose()
         try:
             detail = json.loads(error_body).get("message", error_body.decode())
         except Exception:
@@ -128,7 +140,7 @@ async def tts_stream(req: TTSRequest):
                     yield chunk
         finally:
             await sarvam_resp.aclose()
-            await client.aclose()
+            # Do NOT close _http_client — it is shared across all requests
 
     return StreamingResponse(
         generate(),
