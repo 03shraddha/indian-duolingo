@@ -168,7 +168,7 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
   function handleSelect(option: string) {
     if (selected) return
     setSelected(option)
-    onResult(option === exercise.englishText)
+    // Don't advance yet — let the user read the feedback, then click Continue
   }
 
   const options = exercise.options ?? [exercise.englishText]

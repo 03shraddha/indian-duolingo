@@ -63,11 +63,23 @@ export default function Exercise() {
     }
   }, [currentIdx, lesson, langCfg])
 
-  function handleContinue(skip = false) {
+  // Called by exercises when done — always awards XP on the final exercise
+  function handleResult() {
     if (!lesson) return
     const nextIdx = currentIdx + 1
     if (nextIdx >= exercises.length) {
-      if (!skip) completeLesson(lesson.id)
+      completeLesson(lesson.id)
+      setFinished(true)
+    } else {
+      setCurrentIdx(nextIdx)
+    }
+  }
+
+  // Called by the Skip button — advances without awarding XP
+  function handleSkip() {
+    if (!lesson) return
+    const nextIdx = currentIdx + 1
+    if (nextIdx >= exercises.length) {
       setFinished(true)
     } else {
       setCurrentIdx(nextIdx)
@@ -179,7 +191,7 @@ export default function Exercise() {
           )}
           {/* Skip — lets users move past a stuck/buggy exercise without losing flow */}
           <button
-            onClick={() => handleContinue(true)}
+            onClick={handleSkip}
             className="text-xs font-semibold"
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C0BAB2' }}
           >
@@ -189,13 +201,13 @@ export default function Exercise() {
       </div>
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {exercise && exercise.type === 'listen-identify' && (
-          <ListenIdentify key={exercise.id} exercise={exercise} langCfg={langCfg} onResult={handleContinue} />
+          <ListenIdentify key={exercise.id} exercise={exercise} langCfg={langCfg} onResult={handleResult} />
         )}
         {exercise && exercise.type === 'speak-repeat' && (
-          <SpeakRepeat key={exercise.id} exercise={exercise} langCfg={langCfg} onResult={handleContinue} />
+          <SpeakRepeat key={exercise.id} exercise={exercise} langCfg={langCfg} onResult={handleResult} />
         )}
         {exercise && exercise.type === 'select-phrase' && (
-          <SelectPhrase key={exercise.id} exercise={exercise} langCfg={langCfg} onResult={handleContinue} />
+          <SelectPhrase key={exercise.id} exercise={exercise} langCfg={langCfg} onResult={handleResult} />
         )}
       </div>
     </div>
