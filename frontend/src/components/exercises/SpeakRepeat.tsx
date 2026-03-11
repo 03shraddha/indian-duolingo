@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { tts, stt } from '../../api/sarvam'
+import { stt, prefetchTTSStream, type TTSOptions } from '../../api/sarvam'
 import { useAudio } from '../../hooks/useAudio'
 import type { Exercise, LanguageConfig } from '../../types'
 
@@ -29,7 +29,6 @@ function similarity(a: string, b: string): number {
 const PASS = 0.50
 
 function qualitativeFeedback(score: number, romanized: string) {
-  // Extract the first distinct word/chunk from romanized to name in the note
   const firstChunk = romanized.split(/[,!?]/)[0].trim()
   if (score >= 0.85) return {
     ok: true,
@@ -66,9 +65,7 @@ function WaveformBars({ color = '#FFC857' }: { color?: string }) {
 }
 
 export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
-  const { play } = useAudio()
-  const [audioBase64, setAudioBase64] = useState<string | null>(null)
-  const [audioSlow,   setAudioSlow]   = useState<string | null>(null)
+  const { playStream } = useAudio()
   const [loadingTTS,  setLoadingTTS]  = useState(true)
   const [playing,     setPlaying]     = useState(false)
   const [activeSpeed, setActiveSpeed] = useState<'normal' | 'slow'>('normal')
@@ -83,10 +80,22 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
   const chunksRef      = useRef<Blob[]>([])
   const maxRecTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const playWithFeedback = useCallback(async (base64: string) => {
+  const ttsBase: TTSOptions = {
+    language_code: langCfg.languageCode,
+    speaker: langCfg.ttsDefaultSpeaker,
+    text: exercise.targetText,
+  }
+  const normalOpts: TTSOptions = { ...ttsBase, pace: 1.0 }
+  const slowOpts:   TTSOptions = { ...ttsBase, pace: 0.7 }
+
+  const playWithFeedback = useCallback(async (opts: TTSOptions, onPlay?: () => void) => {
     setPlaying(true)
-    try { await play(base64) } finally { setPlaying(false) }
-  }, [play])
+    try {
+      await playStream(opts, onPlay)
+    } finally {
+      setPlaying(false)
+    }
+  }, [playStream])
 
   useEffect(() => {
     let cancelled = false
@@ -97,40 +106,32 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
     setPlaying(false)
     setActiveSpeed('normal')
 
-    const ttsOpts = { language_code: langCfg.languageCode, speaker: langCfg.ttsDefaultSpeaker }
+    // Prefetch slow version in the background while normal plays
+    prefetchTTSStream(slowOpts)
 
-    Promise.all([
-      tts({ text: exercise.targetText, ...ttsOpts, pace: 1.0 }),
-      tts({ text: exercise.targetText, ...ttsOpts, pace: 0.7 }),
-    ])
-      .then(([normal, slow]) => {
+    const run = async () => {
+      try {
+        // onPlay fires on first chunk — hide spinner and enable controls immediately
+        await playWithFeedback(normalOpts, () => {
+          if (!cancelled) setLoadingTTS(false)
+        })
+      } catch {
         if (cancelled) return
-        setAudioBase64(normal)
-        setAudioSlow(slow)
-        setLoadingTTS(false)
-        return playWithFeedback(normal)
-      })
-      .catch(() => {
-        if (cancelled) return
-        // First attempt failed (e.g. backend cold-start). Retry silently after
-        // 1.5 s — keep showing the loading spinner, no error flash.
+        // Retry once after 1.5 s (backend cold-start)
         setTimeout(async () => {
           if (cancelled) return
           try {
-            const [normal, slow] = await Promise.all([
-              tts({ text: exercise.targetText, ...ttsOpts, pace: 1.0 }),
-              tts({ text: exercise.targetText, ...ttsOpts, pace: 0.7 }),
-            ])
-            if (cancelled) return
-            setAudioBase64(normal)
-            setAudioSlow(slow)
-            setLoadingTTS(false)
-            playWithFeedback(normal)
+            await playWithFeedback(normalOpts, () => {
+              if (!cancelled) setLoadingTTS(false)
+            })
           } catch (retryErr) {
             if (!cancelled) { setError((retryErr as Error).message); setLoadingTTS(false) }
           }
         }, 1500)
-      })
+      }
+    }
+
+    run()
 
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -138,16 +139,13 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
 
   function handleSpeedToggle(speed: 'normal' | 'slow') {
     setActiveSpeed(speed)
-    const audio = speed === 'slow' ? audioSlow : audioBase64
-    if (audio) playWithFeedback(audio)
+    if (!playing) playWithFeedback(speed === 'slow' ? slowOpts : normalOpts)
   }
 
   async function startRecording() {
     if (recording || processing) return
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      // Pick the best supported MIME type. Order matters: prefer opus (small),
-      // fall back to mp4 (iOS Safari), then plain webm.
       const CANDIDATES = [
         { mime: 'audio/webm;codecs=opus', ext: 'webm' },
         { mime: 'audio/ogg;codecs=opus',  ext: 'ogg'  },
@@ -172,7 +170,6 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
           const actualMime = recorder.mimeType || chosen.mime || 'audio/webm'
           const ext = CANDIDATES.find(c => actualMime.startsWith(c.mime.split(';')[0]))?.ext ?? chosen.ext
           const blob = new Blob(chunksRef.current, { type: actualMime })
-          // Race STT against a 40-second timeout so the spinner never loops forever
           const text = await Promise.race([
             stt(blob, langCfg.languageCode, ext),
             new Promise<never>((_, reject) =>
@@ -182,13 +179,11 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
           setTranscript(text)
           setScore(similarity(text, exercise.targetText))
         } catch {
-          // Show a user-friendly message — never expose raw API errors
           setError("Couldn't process your recording. Try again.")
         } finally { setProcessing(false) }
       }
       recorder.start()
       setRecording(true)
-      // Auto-stop after 60 s so the user is never stuck holding the mic
       maxRecTimerRef.current = setTimeout(() => {
         if (recorderRef.current?.state === 'recording') recorderRef.current.stop()
       }, 60_000)
@@ -200,11 +195,9 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
     if (recorderRef.current?.state === 'recording') recorderRef.current.stop()
   }
 
-  // Pass romanized so notes reference the target pronunciation, not the script or English
   const fb   = score !== null ? qualitativeFeedback(score, exercise.romanized) : null
   const done = score !== null && !processing
 
-  // Card colors shift when result is in
   const cardBg     = done && fb ? (fb.ok ? '#EFF4EF' : '#FEF3EE') : '#FFFFFF'
   const cardBorder = done && fb
     ? (fb.ok ? '2px solid #C4D6C4' : '2px solid #F0C4B4')
@@ -225,9 +218,9 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
         tap the card to hear it, then repeat
       </p>
 
-      {/* Word card — transforms into result card when done */}
+      {/* Word card */}
       <button
-        onClick={() => audioBase64 && playWithFeedback(audioBase64)}
+        onClick={() => !loadingTTS && playWithFeedback(activeSpeed === 'slow' ? slowOpts : normalOpts)}
         disabled={loadingTTS}
         className={`exercise-card w-full rounded-3xl text-center ${loadingTTS ? 'audio-loading-card' : ''}`}
         style={{
@@ -239,14 +232,13 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
           transition: loadingTTS ? 'none' : 'border 0.25s ease, box-shadow 0.3s ease, background 0.25s ease',
         }}
       >
-        {/* Top row: result label (when done) OR waveform/speaker icon */}
         <div className="flex items-center justify-between mb-2" style={{ height: 28 }}>
           {done && fb ? (
             <span className="font-bold text-sm sm:text-base" style={{ color: fb.ok ? '#4A7459' : '#E07A5F' }}>
               {fb.label}
             </span>
           ) : (
-            <span /> /* spacer */
+            <span />
           )}
           <span>
             {playing
@@ -258,26 +250,21 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
           </span>
         </div>
 
-        {/* Script text */}
         <p className={`font-bold mb-2 ${langCfg.scriptClass}`}
           style={{ fontSize: 'clamp(28px, 9vw, 44px)', color: '#1F3A5F', lineHeight: 1.2 }}>
           {exercise.targetText}
         </p>
 
-        {/* Romanized */}
         <p className="font-medium mb-1" style={{ fontSize: 'clamp(14px, 4vw, 18px)', color: '#E07A5F', fontStyle: 'italic' }}>
           {exercise.romanized}
         </p>
 
-        {/* English */}
         <p style={{ fontSize: 12, color: '#9CA3AF' }}>{exercise.englishText}</p>
 
-        {/* Result details — shown inside card after scoring */}
         {done && fb && (
           <>
             <div style={{ height: 1, background: fb.ok ? '#C4D6C4' : '#F0C4B4', margin: '12px 0 10px' }} />
             <p className="text-sm text-left" style={{ color: '#6B7280' }}>{fb.note}</p>
-            {/* Side-by-side comparison: target romanized vs what was heard */}
             <div className="text-left mt-3" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 8px', alignItems: 'baseline' }}>
               <span className="text-xs font-semibold" style={{ color: '#9CA3AF' }}>target:</span>
               <span className="text-xs font-semibold" style={{ color: '#4A7459', fontStyle: 'italic' }}>
@@ -296,31 +283,19 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
         )}
       </button>
 
-      {/* Audio loading indicator — replaces controls while TTS prepares */}
       {!done && loadingTTS && (
         <div className="flex flex-col items-center" style={{ gap: 10, minHeight: 120, justifyContent: 'center' }}>
           <div
             className="audio-spinner"
-            style={{
-              width: 44, height: 44,
-              borderRadius: '50%',
-              border: '4px solid #EDE8E0',
-              borderTopColor: '#FF7A00',
-            }}
+            style={{ width: 44, height: 44, borderRadius: '50%', border: '4px solid #EDE8E0', borderTopColor: '#FF7A00' }}
           />
           <p className="text-sm font-semibold" style={{ color: '#9CA3AF' }}>Preparing audio…</p>
         </div>
       )}
 
-      {/* Speed + mic controls — hidden after result or while loading */}
       {!done && !loadingTTS && (
         <div className="flex flex-col items-center" style={{ gap: 14 }}>
-
-          {/* Segmented pill: ▶▶ Normal | ▶ Slow */}
-          <div
-            className="flex rounded-full overflow-hidden"
-            style={{ border: '1.5px solid #EDE8E0', background: '#F8F5F0' }}
-          >
+          <div className="flex rounded-full overflow-hidden" style={{ border: '1.5px solid #EDE8E0', background: '#F8F5F0' }}>
             {(['normal', 'slow'] as const).map((speed) => {
               const active = activeSpeed === speed
               return (
@@ -331,21 +306,17 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
                   style={{
                     background: active ? '#1F3A5F' : 'transparent',
                     color: active ? '#FFFFFF' : '#9CA3AF',
-                    border: 'none',
-                    cursor: 'pointer',
+                    border: 'none', cursor: 'pointer',
                     borderRadius: speed === 'normal' ? '999px 0 0 999px' : '0 999px 999px 0',
                   }}
                 >
-                  <span style={{ fontSize: 11, opacity: 0.75 }}>
-                    {speed === 'normal' ? '▶▶' : '▶'}
-                  </span>
+                  <span style={{ fontSize: 11, opacity: 0.75 }}>{speed === 'normal' ? '▶▶' : '▶'}</span>
                   {speed === 'normal' ? 'Normal' : 'Slow'}
                 </button>
               )
             })}
           </div>
 
-          {/* Mic */}
           <button
             onMouseDown={startRecording}
             onMouseUp={stopRecording}
@@ -387,7 +358,6 @@ export default function SpeakRepeat({ exercise, langCfg, onResult }: Props) {
         </div>
       )}
 
-      {/* Continue button — appears after result */}
       {done && fb && (
         <button
           onClick={() => onResult(fb.ok)}

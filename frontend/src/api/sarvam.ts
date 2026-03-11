@@ -11,7 +11,7 @@ function timeoutSignal(ms: number): AbortSignal {
   return ctrl.signal
 }
 
-// ── Text-to-Speech ────────────────────────────────────────────────────────────
+// ── Text-to-Speech (legacy base64 path) ───────────────────────────────────────
 
 export interface TTSOptions {
   text: string
@@ -74,6 +74,89 @@ export function preloadTTS(opts: TTSOptions): void {
   const key = ttsCacheKey(opts)
   if (ttsCache.has(key)) return // already cached
   tts(opts).catch(() => {})
+}
+
+// ── TTS Streaming ─────────────────────────────────────────────────────────────
+
+/** Cache of fully-downloaded MP3 Blobs — enables instant zero-latency replay. */
+const ttsStreamBlobCache = new Map<string, Promise<Blob>>()
+
+function ttsStreamKey(opts: TTSOptions): string {
+  return `stream:${opts.text}:${opts.language_code ?? 'hi-IN'}:${opts.speaker ?? ''}:${opts.pace ?? 1.0}`
+}
+
+async function fetchTTSStreamResponse(opts: TTSOptions): Promise<Response> {
+  const res = await fetch(`${BASE}/tts/stream`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      text: opts.text,
+      language_code: opts.language_code ?? 'hi-IN',
+      speaker: opts.speaker,
+      pace: opts.pace ?? 1.0,
+    }),
+    signal: timeoutSignal(35_000),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.detail ?? `TTS stream failed (${res.status})`)
+  }
+  return res
+}
+
+/**
+ * Start streaming TTS audio from the backend.
+ *
+ * Returns a ReadableStream for immediate MediaSource playback AND a Promise<Blob>
+ * that resolves once all audio bytes are downloaded (stored in cache for replay).
+ *
+ * On cache hit: returns a fresh stream from the cached Blob — zero network latency.
+ */
+export async function startTTSStream(opts: TTSOptions): Promise<{
+  stream: ReadableStream<Uint8Array>
+  blobPromise: Promise<Blob>
+}> {
+  const key = ttsStreamKey(opts)
+
+  // Cache hit: replay from cached Blob as a new ReadableStream
+  if (ttsStreamBlobCache.has(key)) {
+    const blob = await ttsStreamBlobCache.get(key)!
+    return {
+      stream: blob.stream() as ReadableStream<Uint8Array>,
+      blobPromise: Promise.resolve(blob),
+    }
+  }
+
+  const res = await fetchTTSStreamResponse(opts)
+
+  // Tee the response body: one branch for real-time playback, one for caching
+  const [playStream, cacheStream] = res.body!.tee()
+
+  const blobPromise = new Response(cacheStream, { headers: { 'Content-Type': 'audio/mpeg' } })
+    .blob()
+    .catch((err) => {
+      ttsStreamBlobCache.delete(key)
+      throw err
+    })
+
+  ttsStreamBlobCache.set(key, blobPromise)
+  return { stream: playStream as ReadableStream<Uint8Array>, blobPromise }
+}
+
+/**
+ * Pre-download and cache TTS audio for near-instant future playback.
+ * Fire-and-forget — errors are silently ignored.
+ */
+export function prefetchTTSStream(opts: TTSOptions): void {
+  const key = ttsStreamKey(opts)
+  if (ttsStreamBlobCache.has(key)) return
+  const blobPromise = fetchTTSStreamResponse(opts)
+    .then((res) => res.blob())
+    .catch(() => {
+      ttsStreamBlobCache.delete(key)
+      return new Blob([], { type: 'audio/mpeg' })
+    })
+  ttsStreamBlobCache.set(key, blobPromise)
 }
 
 // ── Speech-to-Text ────────────────────────────────────────────────────────────

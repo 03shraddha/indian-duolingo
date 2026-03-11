@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
-import { tts } from '../../api/sarvam'
 import { useAudio } from '../../hooks/useAudio'
 import type { Exercise, LanguageConfig } from '../../types'
+import type { TTSOptions } from '../../api/sarvam'
 
 interface Props {
   exercise: Exercise
@@ -57,9 +57,8 @@ function getHint(text: string): string | null {
 }
 
 export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
-  const { play } = useAudio()
+  const { playStream } = useAudio()
   const [loading, setLoading] = useState(true)
-  const [audioBase64, setAudioBase64] = useState<string | null>(null)
   const [playing, setPlaying] = useState(false)
   const [selected, setSelected] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -104,18 +103,28 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
       setScriptLen(i)
       if (i >= segments.length) {
         clearInterval(scriptTimerRef.current!)
-        // Romanization fades in after script finishes
         setTimeout(() => setRomaVisible(true), 100)
       }
     }, 60)
   }
 
-  async function playWithReveal(b64: string) {
+  // ttsOpts is stable across renders for this exercise
+  const ttsOpts: TTSOptions = {
+    text: exercise.targetText,
+    language_code: langCfg.languageCode,
+    speaker: langCfg.ttsDefaultSpeaker,
+  }
+
+  async function playWithReveal() {
     setPlaying(true)
     try {
-      // Start script reveal shortly after audio begins playing
-      setTimeout(() => revealScript(), 250)
-      await play(b64)
+      // onPlay fires when first chunk is buffered — reveal script at that moment
+      await playStream(ttsOpts, () => {
+        setLoading(false)
+        revealScript()
+      })
+    } catch {
+      // ignore playback errors on replay
     } finally {
       setPlaying(false)
     }
@@ -128,32 +137,24 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
     setScriptLen(0)
     setRomaVisible(false)
 
-    const opts = { text: exercise.targetText, language_code: langCfg.languageCode, speaker: langCfg.ttsDefaultSpeaker }
-
-    tts(opts)
-      .then((b64) => {
+    const run = async () => {
+      try {
+        await playWithReveal()
+      } catch {
         if (cancelled) return
-        setAudioBase64(b64)
-        setLoading(false)
-        return playWithReveal(b64)
-      })
-      .catch(() => {
-        if (cancelled) return
-        // First attempt failed (e.g. backend cold-start). Retry silently after
-        // 1.5 s — keep showing the loading spinner, no error flash.
+        // Retry once after 1.5 s (backend cold-start)
         setTimeout(async () => {
           if (cancelled) return
           try {
-            const b64 = await tts(opts)
-            if (cancelled) return
-            setAudioBase64(b64)
-            setLoading(false)
-            playWithReveal(b64)
+            await playWithReveal()
           } catch (retryErr) {
             if (!cancelled) { setError((retryErr as Error).message); setLoading(false) }
           }
         }, 1500)
-      })
+      }
+    }
+
+    run()
 
     return () => {
       cancelled = true
@@ -182,7 +183,7 @@ export default function ListenIdentify({ exercise, langCfg, onResult }: Props) {
 
       {/* Word card — tap to replay, animated border + waveform during playback */}
       <button
-        onClick={() => !loading && audioBase64 && playWithReveal(audioBase64)}
+        onClick={() => !loading && playWithReveal()}
         disabled={loading}
         className="exercise-card w-full rounded-3xl text-center disabled:opacity-60"
         style={{

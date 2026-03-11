@@ -9,7 +9,7 @@ import { getLessonById } from '../data/lessons'
 import { useProgress } from '../hooks/useProgress'
 import { useLanguage } from '../hooks/useLanguage'
 import { LANGUAGE_CONFIG } from '../types'
-import { preloadTTS } from '../api/sarvam'
+import { prefetchTTSStream } from '../api/sarvam'
 import type { Exercise as ExerciseType, Language } from '../types'
 
 export default function Exercise() {
@@ -56,10 +56,10 @@ export default function Exercise() {
     if (!next) return
     const opts = { language_code: langCfg.languageCode, speaker: langCfg.ttsDefaultSpeaker }
     if (next.type === 'listen-identify') {
-      preloadTTS({ text: next.targetText, ...opts })
+      prefetchTTSStream({ text: next.targetText, ...opts })
     } else if (next.type === 'speak-repeat') {
-      preloadTTS({ text: next.targetText, ...opts, pace: 1.0 })
-      preloadTTS({ text: next.targetText, ...opts, pace: 0.7 })
+      prefetchTTSStream({ text: next.targetText, ...opts, pace: 1.0 })
+      prefetchTTSStream({ text: next.targetText, ...opts, pace: 0.7 })
     }
   }, [currentIdx, lesson, langCfg])
 
