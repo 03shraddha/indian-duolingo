@@ -63,9 +63,8 @@ function playWithMediaSource(
         }
 
         if (sourceBuffer.updating) await waitForUpdate()
-        // Slice to a plain ArrayBuffer to satisfy stricter TS lib typings
-        const buf = value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength)
-        sourceBuffer.appendBuffer(buf)
+        // Copy into a fresh ArrayBuffer — avoids SharedArrayBuffer typing issue
+        sourceBuffer.appendBuffer(new Uint8Array(value).buffer as ArrayBuffer)
         await waitForUpdate()
 
         // Start playback after the first chunk is buffered
