@@ -227,32 +227,96 @@ Progress is stored per language in localStorage:
 
 ### Overview
 
-Indian Duolingo is a browser-based language learning app covering six Indian languages — Hindi, Kannada, Tamil, Telugu, Bengali, and Marathi. The premise is conversational fluency in 2–5 minutes per lesson: users hear phrases, repeat them, and select correct forms, all without grammar instruction or account creation. A FastAPI backend handles TTS (Sarvam `bulbul:v3`) and STT (`saarika:v2.5`) on demand; the React frontend manages exercise flow and persists all progress in localStorage. The complete system runs without a database.
+Indian Duolingo teaches everyday spoken phrases across six Indian languages — no grammar rules, no account needed, 2–5 minutes per lesson.
+
+**What it does:**
+- User picks a language → works through 5–6 exercises → earns XP and builds a streak
+- Three exercise types: Listen & Identify, Speak & Repeat, Select the Phrase
+- Backend calls Sarvam AI on demand for audio generation and pronunciation scoring
+- All progress lives in the browser's `localStorage` — no database, no backend state
+
+**AI models powering it:**
+
+| Model | Role | Where it's used |
+|-------|------|----------------|
+| `bulbul:v3` | Text-to-speech | Generates audio for every phrase in every language |
+| `saarika:v2.5` | Speech-to-text | Transcribes the user's mic recording in Speak & Repeat |
+
+Pronunciation is then scored by comparing the STT transcript to the expected phrase using **bigram similarity** — a lightweight string-matching heuristic that doesn't require a separate ML model.
 
 ---
 
 ### Narrative
 
-The project began as **BhaashaPath**, a Hindi-only prototype framed around vocabulary acquisition. The first significant decision was reframing: rather than teaching grammar or word lists, the app would teach the phrases people actually use in daily life — ordering chai, asking for directions, agreeing and disagreeing. This framing preceded the exercise design and drove every subsequent content decision.
+**How it started — Hindi only**
+- Began as **BhaashaPath**, a Hindi vocabulary app
+- First pivot: stop teaching word lists and grammar; teach phrases people actually say (ordering chai, asking directions, agreeing/disagreeing)
+- That reframe came before any exercise was built and shaped every content decision after
 
-Expanding from Hindi to six languages was the next architectural commitment. It forced a clean separation between language configuration (speaker mappings, font classes, lesson data paths) and exercise logic — any language-specific value hardcoded in the wrong place became a bug when the second language was added.
+**Expanding to six languages**
+- Adding a second language immediately revealed a structural problem: any language-specific value hardcoded in exercise logic became a bug
+- Forced a clean split — language config (speaker names, font classes, lesson file paths) is separate from exercise rendering logic
+- Adding a language now requires touching **six separate locations**: TypeScript union type, language config map, lesson data file, lessons index, Google Font import, CSS script class — all six must be updated together or the language appears in the selector but breaks mid-exercise
 
-Early exercise design included a type-translation exercise where users typed the Hindi equivalent of an English phrase. This was removed and replaced with select-phrase MCQ. The reasoning is visible in the problem: typing in a non-Latin script on a mobile keyboard requires the user to already know the script — which eliminates beginners entirely. Select-phrase solved this by displaying native script alongside Roman transliteration in every option card, making the exercise readable without prior script knowledge.
+**Why type-translation was removed**
+- Early design had users type the Hindi equivalent of an English phrase
+- Problem: typing in a non-Latin script on a mobile keyboard requires already knowing that script — it excluded every beginner
+- Replaced with **Select the Phrase (MCQ)**: four options shown in native script with Roman transliteration directly below each one — readable without any prior script knowledge
 
-TTS latency became the dominant UX problem post-MVP. The original implementation fetched a full base64 WAV from the Sarvam API and played it only after the complete response arrived. When perceived wait times proved inconsistent, streaming audio via MediaSource API was implemented — the first audio chunk plays immediately while the rest buffers. iOS required separate handling: WebKit's audio context model requires a user gesture to initiate playback, which interacted poorly with the streaming approach and produced the "audio error flash" bug patched across two commits. The resolution was a gesture-gated audio context initialization isolated per platform.
+**Solving TTS latency**
+- Original flow: call Sarvam API → wait for full base64 WAV to download → play
+- When perceived load time was too long, switched to **`MediaSource` streaming**:
+  - Backend streams audio in chunks over HTTP
+  - First chunk plays immediately while the rest buffers in the background
+  - Cuts perceived wait time from "wait for the whole file" to "starts almost instantly"
 
-The XP award and MCQ feedback bugs (fixed in commit `438333b`) appeared late in development, after the core exercise flow was already stable. Vitest tests were added in the commit immediately before the Render deployment was configured — a build-first, test-second trajectory common in compressed timelines. The tests cover progress state and XP accounting, the exact areas where the bugs appeared.
+**The iOS audio bug**
+- WebKit (Safari/iOS) requires a user gesture before any audio context can be created — Chrome does not
+- The streaming approach initialized the audio context before any gesture had occurred, causing a silent failure that only showed up on iOS
+- Fix: detect platform at startup, defer audio context creation to the first explicit tap
+- Required making every exercise component gesture-aware
 
-The TTS model upgrade from `bulbul:v2` to `v3` was not optional: v2 speaker names (anushka, abhilash, kavitha in certain contexts) are invalid on v3 and fail at runtime without a clear error. This was discovered in production and locked down by pinning the speaker list explicitly per language.
+**TTS model upgrade: v2 → v3**
+- `bulbul:v2` speaker names (e.g., `anushka`, `abhilash`) are invalid on `v3`
+- `v3` doesn't return a descriptive error — it just fails silently at runtime
+- Only discovered in production; fixed by pinning an explicit valid speaker list per language in config
+
+**Testing came last**
+- Vitest tests were added one commit before the Render deployment was configured
+- The tests cover XP accounting and progress state — the exact two areas where bugs appeared just before launch
+- Classic build-first, harden-before-deploy trajectory under time pressure
 
 ---
 
 ### Technical Reflection
 
-**Constraints encountered.** The Sarvam `bulbul:v3` API accepts only a fixed set of valid speaker names; v2 speakers fail at runtime without a descriptive error, making the failure mode silent during development and visible only in production. iOS WebKit enforces user-gesture requirements for audio context initialization that Chrome does not, creating a class of bugs unreproducible in the primary development browser. The `MediaSource` streaming API is unsupported in older Safari versions, requiring a fallback to the full WAV path — two audio delivery code paths now exist and must both be maintained.
+**Constraints**
 
-**Resolution patterns.** Streaming TTS reduced perceived latency significantly, but it introduced state complexity: the MediaSource buffer can stall if the backend stops writing before the stream closes, which is why a `/tts` fallback endpoint was preserved alongside the streaming path. The iOS audio context issue was resolved by detecting the platform and deferring audio initialization to the first user interaction — a pattern that requires the exercise UI to be gesture-aware from the start.
+| Constraint | What it means in practice |
+|-----------|--------------------------|
+| `bulbul:v3` speaker names are a fixed closed list | Using any v2 speaker name fails silently at runtime — not caught until production |
+| iOS WebKit audio context rules differ from Chrome | Entire class of bugs that don't reproduce during development |
+| `MediaSource` unsupported in older Safari | Two audio delivery paths (streaming + full WAV fallback) must both be maintained |
+| Default single uvicorn worker | TTS requests queue under concurrent load — latency scales linearly with users |
+| `localStorage`-only persistence | No multi-device sync; clearing browser data wipes all progress with no recovery |
 
-**Failure points under scale.** All progress is in localStorage: multi-device use is impossible, clearing browser data resets everything, and there is no recovery path. The backend runs on a single uvicorn worker by default; concurrent TTS requests queue rather than parallelize, so lesson load times degrade linearly with concurrent users. The pronunciation scorer uses bigram similarity — a simple heuristic that works for short phrases but will produce inconsistent scores on longer sentences where word order variations are valid.
+**How key problems were resolved**
 
-**Long-term maintenance considerations.** Adding a new language requires touching five separate locations: the TypeScript union type, the language config map, a new lesson data file, the lessons index, a Google Font import, and a CSS script class. Any partially completed addition produces a language that appears in the selector but fails mid-exercise. The speaker name mapping (language → Sarvam voice) is maintained in application code rather than configuration — a Sarvam API change to speaker availability requires a code change and redeploy. As lesson content expands beyond Hindi's nine lessons, the flat per-language file structure will need splitting or indexing to remain navigable.
+| Problem | Solution |
+|---------|---------|
+| High TTS perceived latency | Stream via `MediaSource` — first chunk plays immediately |
+| iOS audio context crash | Gate initialization behind user gesture; detect platform at app start |
+| Streaming path failure risk | Keep `/tts` (full WAV) endpoint as fallback alongside the streaming path |
+| Pronunciation scoring without an ML model | Bigram similarity between STT output and expected text; pass/fail thresholds at 0.85 / 0.65 / 0.50 |
+| v2 speaker names breaking v3 TTS | Hardcode the valid v3 speaker list per language in config; never derive from user input |
+
+**What breaks at scale**
+- **Concurrency**: One uvicorn worker handles all TTS calls sequentially — 10 concurrent users means the 10th user waits for all 9 ahead of them
+- **Storage**: `localStorage` has per-domain size limits; users studying multiple languages simultaneously will accumulate state faster
+- **Pronunciation scoring**: Bigram similarity handles short phrases well but produces inconsistent results on longer sentences where multiple valid word orders exist
+- **Language additions**: The six-file update requirement has no enforcement mechanism — a partial add leaves the language visibly broken in the UI
+
+**Maintenance risks**
+- Sarvam may rename or deprecate speakers in `bulbul:v3`; the speaker mapping lives in app code, so any change requires a redeploy
+- As Hindi expands past 9 lessons, the flat one-file-per-language structure will need an index layer or splitting by unit
+- The dual audio path (streaming + WAV fallback) doubles the surface area for future audio bugs
